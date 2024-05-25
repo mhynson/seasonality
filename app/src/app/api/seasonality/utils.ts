@@ -85,69 +85,54 @@ export const getPeriodLabelFromDate = (type = "monthly", date: Date) => {
 };
 
 export const sum = (total: number, current: number) => total + current;
-
 export const calculateSeasonality = (
   type: "monthly" | "weekly",
   data: any[] // TODO: fix type to HistoricalRowHistory
-) => {
-  const seasonalityAverages: SeasonalityAverages = {};
+): SeasonalityAverages => {
+  // Transform data to PercentChangeDataForPeriod and group by label
+  const groupedPeriods =
+    data
+      ?.map(({ open, close, date }: HistoricalRowHistory) => ({
+        label: getPeriodLabelFromDate(type, date),
+        date,
+        open,
+        close,
+        change: (close - open) / open,
+      }))
+      .reduce((acc: SeasonalityData, { label, change, date }) => {
+        const entry = { up: change * 100 >= 0, change, date };
+        return {
+          ...acc,
+          [label]: acc[label] ? [...acc[label], entry] : [entry],
+        };
+      }, {}) || {};
 
-  const groupedPeriods = (
-    data?.reduce(
-      (
-        acc: PercentChangeDataForPeriod[],
-        { open, close, date }: HistoricalRowHistory
-      ) => [
+  // Calculate seasonality averages
+  const seasonalityAverages = Object.entries(groupedPeriods).reduce(
+    (acc: SeasonalityAverages, [label, periods]: [string, any]) => {
+      const changes = periods.map(({ change }: SeasonalityEntry) => change);
+      const averageChange = changes.reduce(sum, 0) / periods.length;
+      const higherCloses = periods.filter(
+        (entry: SeasonalityEntry) => entry.up
+      ).length;
+      const lowerCloses = periods.filter(
+        (entry: SeasonalityEntry) => !entry.up
+      ).length;
+      const higherPct = higherCloses / periods.length;
+
+      return {
         ...acc,
-        {
-          label: getPeriodLabelFromDate(type, date),
-          date,
-          open,
-          close: close,
-          change: (close - open) / open,
+        [label]: {
+          averageChange,
+          lowerCloses,
+          higherCloses,
+          count: periods.length,
+          higherPct,
         },
-      ],
-      []
-    ) || []
-  ).reduce((acc: SeasonalityData, curr: PercentChangeDataForPeriod) => {
-    const { label, change, date } = curr;
-    if (!acc[label]) {
-      acc[label] = [];
-    }
+      };
+    },
+    {}
+  );
 
-    return {
-      ...acc,
-      [`${label}`]: [
-        ...acc[label],
-        {
-          up: change * 100 >= 0,
-          change,
-          date,
-        },
-      ],
-    };
-  }, {});
-
-  Object.entries(groupedPeriods).forEach(([label, periods]: [string, any]) => {
-    const averageChange =
-      periods.map(({ change }: SeasonalityEntry) => change).reduce(sum, 0) /
-      periods.length;
-
-    const higherCloses = periods.filter(
-      (entry: SeasonalityEntry) => entry.up
-    ).length;
-    const lowerCloses = periods.filter(
-      (entry: SeasonalityEntry) => !entry.up
-    ).length;
-    const higherPct = higherCloses / periods.length;
-
-    seasonalityAverages[label] = {
-      averageChange,
-      lowerCloses,
-      higherCloses,
-      count: periods.length,
-      higherPct,
-    };
-  });
   return seasonalityAverages;
 };
