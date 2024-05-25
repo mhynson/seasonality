@@ -1,5 +1,4 @@
 interface HistoricalRowHistory {
-  [key: string]: any;
   date: Date;
   open: number;
   high: number;
@@ -32,6 +31,7 @@ interface PercentChangeDataForPeriod {
 interface SeasonalityEntry {
   up: boolean;
   change: number;
+  date: string;
 }
 
 type Month =
@@ -49,11 +49,7 @@ type Month =
   | "Dec";
 
 type SeasonalityData = {
-  [key in Month]: SeasonalityEntry[];
-};
-
-type AverageSeasonalityData = {
-  [key in Month]: SeasonalityEntry;
+  [key in Month | string]: SeasonalityEntry[];
 };
 
 export const formatDate = (date: Date): string => {
@@ -72,67 +68,70 @@ export const getWeekNumber = (date: Date): number => {
   return Math.floor(diff / oneDay / 7);
 };
 
-export const getPeriodLabelFromDate = (type = "monthly", date: Date) => {
-  if (type === "weekly") return getWeekNumber(date);
+export const getPeriodLabelFromDate = (
+  type: "monthly" | "weekly",
+  date: Date
+): string => {
+  if (type === "weekly") return getWeekNumber(date).toString();
 
-  if (type === "monthly")
+  if (type === "monthly") {
     return date.toLocaleDateString("default", {
       month: "short",
       timeZone: "UTC",
     });
+  }
 
-  return date;
+  return date.toISOString();
 };
 
 export const sum = (total: number, current: number) => total + current;
+
 export const calculateSeasonality = (
   type: "monthly" | "weekly",
-  data: any[] // TODO: fix type to HistoricalRowHistory
+  data: HistoricalRowHistory[]
 ): SeasonalityAverages => {
   // Transform data to PercentChangeDataForPeriod and group by label
-  const groupedPeriods =
-    data
-      ?.map(({ open, close, date }: HistoricalRowHistory) => ({
-        label: getPeriodLabelFromDate(type, date),
-        date,
-        open,
-        close,
-        change: (close - open) / open,
-      }))
-      .reduce((acc: SeasonalityData, { label, change, date }) => {
-        const entry = { up: change * 100 >= 0, change, date };
-        return {
-          ...acc,
-          [label]: acc[label] ? [...acc[label], entry] : [entry],
-        };
-      }, {}) || {};
-
-  // Calculate seasonality averages
-  const seasonalityAverages = Object.entries(groupedPeriods).reduce(
-    (acc: SeasonalityAverages, [label, periods]: [string, any]) => {
-      const changes = periods.map(({ change }: SeasonalityEntry) => change);
-      const averageChange = changes.reduce(sum, 0) / periods.length;
-      const higherCloses = periods.filter(
-        (entry: SeasonalityEntry) => entry.up
-      ).length;
-      const lowerCloses = periods.filter(
-        (entry: SeasonalityEntry) => !entry.up
-      ).length;
-      const higherPct = higherCloses / periods.length;
-
+  const groupedPeriods = data
+    .map(({ open, close, date }) => ({
+      label: getPeriodLabelFromDate(type, new Date(date)),
+      date,
+      open,
+      close,
+      change: (close - open) / open,
+    }))
+    .reduce<SeasonalityData>((acc, { label, change, date }) => {
+      const entry: SeasonalityEntry = {
+        up: change * 100 >= 0,
+        change,
+        date: date.toISOString(),
+      };
       return {
         ...acc,
-        [label]: {
-          averageChange,
-          lowerCloses,
-          higherCloses,
-          count: periods.length,
-          higherPct,
-        },
+        [label]: acc[label] ? [...acc[label], entry] : [entry],
       };
-    },
-    {}
-  );
+    }, {});
+
+  // Calculate seasonality averages
+  const seasonalityAverages = Object.entries(
+    groupedPeriods
+  ).reduce<SeasonalityAverages>((acc, [label, periods]) => {
+    const changes = periods!.map(({ change }) => change);
+    const averageChange = changes.reduce(sum, 0) / periods!.length;
+    const higherCloses = periods!.filter(({ up }) => up).length;
+    const lowerCloses = periods!.filter(({ up }) => !up).length;
+    const higherPct = higherCloses / periods!.length;
+
+    return {
+      ...acc,
+      [label]: {
+        averageChange,
+        lowerCloses,
+        higherCloses,
+        count: periods!.length,
+        higherPct,
+      },
+    };
+  }, {});
 
   return seasonalityAverages;
 };
