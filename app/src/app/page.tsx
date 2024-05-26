@@ -31,9 +31,10 @@ const Home = () => {
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     const symbolsArray = symbols
-      .replace(/\n/, ",")
+      .replace(/\n/g, ",")
       .split(",")
-      .map((s) => s.trim());
+      .map((s) => s.trim())
+      .filter((s) => s);
 
     const allData: { [symbol: string]: SymbolData } = {};
 
@@ -46,15 +47,24 @@ const Home = () => {
     setData(allData);
   };
 
+  const renderError = ({ error }: { error: string }) => (
+    <p className="text-black">{error}</p>
+  );
+
   const renderBars = (seasonalityData: SeasonalityAverages) => {
+    if (!seasonalityData) return <></>;
     return Object.entries(seasonalityData).map(([label, stats]) => (
       <div key={label} className="flex items-center mb-4">
-        <span className="w-12">{label}</span>
+        <span className="w-12 text-black uppercase font-semibold">{label}</span>
         <div
-          className="flex items-center bg-blue-500 h-8 rounded"
+          className="flex items-center bg-gradient-to-r from-blue-500 to-red-400 h-8 rounded"
           style={{ width: `${stats.higherPct * 100}%` }}
         >
-          <span className="text-white text-xs pl-2">
+          <span
+            className={`text-xs pl-2 ${
+              stats.higherPct ? "text-white" : "text-black"
+            }`}
+          >
             {(stats.higherPct * 100).toFixed(2)}%
           </span>
         </div>
@@ -64,13 +74,18 @@ const Home = () => {
 
   const renderSymbolData = (symbol: string, symbolData: SymbolData) => {
     const { view, data } = symbolData;
+    const btnBaseClasses =
+      "rounded px-4 py-2 ml-1 text-white  hover:bg-red-300 hover:opacity-100";
+    const btnActiveClasses = "bg-red-400";
+    const btnInactiveClasses = "bg-slate-300 opacity-70";
+
     return (
       <div key={symbol} className="mt-8">
         <h2 className="text-xl font-bold">{symbol.toUpperCase()}</h2>
         <div className="flex justify-center mt-4">
           <button
-            className={`px-4 py-2 ${
-              view === "monthly" ? "bg-blue-500 text-white" : "bg-gray-300"
+            className={`${btnBaseClasses} ${
+              view === "monthly" ? btnActiveClasses : btnInactiveClasses
             }`}
             onClick={() =>
               setData((prevData) => ({
@@ -82,8 +97,8 @@ const Home = () => {
             Monthly View
           </button>
           <button
-            className={`px-4 py-2 ml-2 ${
-              view === "weekly" ? "bg-blue-500 text-white" : "bg-gray-300"
+            className={`${btnBaseClasses} ${
+              view === "weekly" ? btnActiveClasses : btnInactiveClasses
             }`}
             onClick={() =>
               setData((prevData) => ({
@@ -96,7 +111,7 @@ const Home = () => {
           </button>
         </div>
         <div className="bg-white p-4 rounded mt-4">
-          {renderBars(data[view])}
+          {data?.error ? renderError(data) : renderBars(data?.[view])}
         </div>
       </div>
     );
