@@ -109,24 +109,28 @@ const Home = () => {
         <p className="mt-2 text-3xl font-bold tracking-tight text-white sm:text-4xl">
           View monthly and weekly stock seasonality!
         </p>
-        <p className="mt-9 leading-7 text-white">
-          Just enter ticker(s) below (comma-separated for multiple symbols)
+        <p className="mt-9 leading-7 text-white">Just enter ticker(s) below.</p>
+        <p className="text-xs leading-7 text-white">
+          Symbols can be comma-separated or entered on a new line.
         </p>
       </div>
-      <div className="max-w-2xl mx-auto px-8 py-18 xs:px-12 sm:p-24 bg-slate-300 rounded-4xl">
+      <div className="container xl mt-9 mx-auto p-12 bg-slate-700 rounded-xl shadow-lg text-white">
         <form onSubmit={handleSubmit}>
           <label className="block" htmlFor="symbols">
             Ticker Symbols
           </label>
           <textarea
-            className="block p-4 w-full"
+            className="block p-4 w-full mt-6 text-black"
             id="symbols"
             value={symbols}
             onChange={(e) => setSymbols(e.target.value)}
             required
             rows={3}
           />
-          <button className="p-4 rounded bg-blue-100" type="submit">
+          <button
+            className="p-4 rounded mt-6 w-36 bg-indigo-600 text-white"
+            type="submit"
+          >
             Submit
           </button>
         </form>
