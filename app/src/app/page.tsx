@@ -1,15 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { SeasonalityAverageEntry } from "./api/seasonality/utils";
 
 interface SeasonalityAverages {
-  [key: string]: {
-    averageChange: number;
-    lowerCloses: number;
-    higherCloses: number;
-    count: number;
-    higherPct: number;
-  };
+  [key: string]: SeasonalityAverageEntry;
 }
 
 interface SeasonalityData {
@@ -54,19 +49,27 @@ const Home = () => {
   const renderBars = (seasonalityData: SeasonalityAverages) => {
     if (!seasonalityData) return <></>;
     return Object.entries(seasonalityData).map(([label, stats]) => (
-      <div key={label} className="flex items-center mb-4">
-        <span className="w-12 text-black uppercase font-semibold">{label}</span>
-        <div
-          className="flex items-center bg-gradient-to-r from-blue-500 to-red-400 h-8 rounded"
-          style={{ width: `${stats.higherPct * 100}%` }}
-        >
-          <span
-            className={`text-xs pl-2 ${
-              stats.higherPct ? "text-white" : "text-black"
-            }`}
-          >
-            {(stats.higherPct * 100).toFixed(2)}%
+      <div key={label} className="mb-8">
+        <div className="flex items-center">
+          <span className="w-12 text-black uppercase font-semibold">
+            {label}
           </span>
+          <div
+            className="flex items-center bg-gradient-to-r from-blue-500 to-red-400 h-8 rounded"
+            style={{ width: `${stats.higherPct * 100}%` }}
+          >
+            <span
+              className={`text-xs pl-2 ${
+                stats.higherPct ? "text-white" : "text-black"
+              }`}
+            >
+              {(stats.higherPct * 100).toFixed(2)}%
+            </span>
+          </div>
+        </div>
+        <div className="text-right ml-2 text-xs italic text-black">
+          Average % Change: {(stats.averageChange * 100).toPrecision(2)}% |
+          Average Range: ${stats.averageRange.toFixed(2)}
         </div>
       </div>
     ));
@@ -80,7 +83,7 @@ const Home = () => {
     const btnInactiveClasses = "bg-slate-300 opacity-70";
 
     return (
-      <div key={symbol} className="mt-8">
+      <div key={symbol} className="mt-8 border-t-2 py-4">
         <h2 className="text-xl font-bold">{symbol.toUpperCase()}</h2>
         <div className="flex justify-center mt-4">
           <button
@@ -131,11 +134,11 @@ const Home = () => {
       </div>
       <div className="container xl mt-9 mx-auto p-12 bg-slate-700 rounded-xl shadow-lg text-white">
         <form onSubmit={handleSubmit}>
-          <label className="block" htmlFor="symbols">
+          <label className="block font-semibold" htmlFor="symbols">
             Ticker Symbols
           </label>
           <textarea
-            className="block p-4 w-full mt-6 text-black"
+            className="block p-4 w-full mt-2 text-black"
             id="symbols"
             value={symbols}
             onChange={(e) => setSymbols(e.target.value)}
@@ -143,7 +146,7 @@ const Home = () => {
             rows={3}
           />
           <button
-            className="p-4 rounded mt-6 w-36 bg-indigo-600 text-white"
+            className="p-4 rounded mt-4 mb-4 w-36 bg-indigo-600 text-white"
             type="submit"
           >
             Submit

@@ -8,8 +8,9 @@ interface HistoricalRowHistory {
   volume: number;
 }
 
-interface SeasonalityAverageEntry {
+export interface SeasonalityAverageEntry {
   averageChange: number;
+  averageRange: number;
   lowerCloses: number;
   higherCloses: number;
   count: number;
@@ -31,6 +32,7 @@ interface PercentChangeDataForPeriod {
 interface SeasonalityEntry {
   up: boolean;
   change: number;
+  range: number;
   date: string;
 }
 
@@ -90,19 +92,20 @@ export const calculateSeasonality = (
   type: "monthly" | "weekly",
   data: HistoricalRowHistory[]
 ): SeasonalityAverages => {
-  // Transform data to PercentChangeDataForPeriod and group by label
   const groupedPeriods = data
-    .map(({ open, close, date }) => ({
+    .map(({ open, high, low, close, date }) => ({
       label: getPeriodLabelFromDate(type, new Date(date)),
       date,
       open,
       close,
+      range: Math.abs(high - low),
       change: (close - open) / open,
     }))
-    .reduce<SeasonalityData>((acc, { label, change, date }) => {
+    .reduce<SeasonalityData>((acc, { label, change, range, date }) => {
       const entry: SeasonalityEntry = {
         up: change * 100 >= 0,
         change,
+        range,
         date: date.toISOString(),
       };
       return {
@@ -120,11 +123,14 @@ export const calculateSeasonality = (
     const higherCloses = periods!.filter(({ up }) => up).length;
     const lowerCloses = periods!.filter(({ up }) => !up).length;
     const higherPct = higherCloses / periods!.length;
+    const averageRange =
+      periods!.map(({ range }) => range).reduce(sum, 0) / periods!.length;
 
     return {
       ...acc,
       [label]: {
         averageChange,
+        averageRange,
         lowerCloses,
         higherCloses,
         count: periods!.length,
