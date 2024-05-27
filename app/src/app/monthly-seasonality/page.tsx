@@ -136,18 +136,21 @@ const MonthlySeasonality = () => {
 
         <div className="container xl mt-9 mx-auto p-12 bg-slate-700 rounded-xl shadow-lg text-white">
           <form onSubmit={handleSubmit}>
-            <label className="block" htmlFor="symbols">
+            <label className="block font-semibold" htmlFor="symbols">
               Ticker Symbols
             </label>
             <textarea
-              className="block p-4 w-full"
+              className="block p-4 w-full mt-2 text-black"
               id="symbols"
               value={symbols}
               onChange={(e) => setSymbols(e.target.value)}
               required
               rows={3}
             />
-            <button className="p-4 rounded bg-blue-100" type="submit">
+            <button
+              className="p-4 rounded mt-4 mb-4 w-36 bg-indigo-600 text-white"
+              type="submit"
+            >
               Submit
             </button>
           </form>
