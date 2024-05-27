@@ -86,6 +86,14 @@ export const getPeriodLabelFromDate = (
   return date.toISOString();
 };
 
+export const getStartOfWeek = (weekNumber: number | string) => {
+  const week = parseFloat(`${weekNumber}`);
+  const currentYear = new Date().getFullYear();
+  const startDay = new Date(currentYear, 0, 1).getDay();
+  const offset = startDay <= 4 ? startDay : startDay - 7;
+  return formatDate(new Date(currentYear, 0, 1 + week * 7 - offset + 1));
+};
+
 export const sum = (total: number, current: number) => total + current;
 
 export const calculateSeasonality = (

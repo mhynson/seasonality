@@ -1,8 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { SeasonalityAverageEntry } from "./api/seasonality/utils";
-
+import {
+  SeasonalityAverageEntry,
+  getStartOfWeek,
+} from "./api/seasonality/utils";
+import Link from "next/link";
 interface SeasonalityAverages {
   [key: string]: SeasonalityAverageEntry;
 }
@@ -46,10 +49,20 @@ const Home = () => {
     <p className="text-black">{error}</p>
   );
 
-  const renderBars = (seasonalityData: SeasonalityAverages) => {
+  const renderBars = (
+    seasonalityData: SeasonalityAverages,
+    view: "weekly" | "monthly"
+  ) => {
     if (!seasonalityData) return <></>;
     return Object.entries(seasonalityData).map(([label, stats]) => (
-      <div key={label} className="mb-8">
+      <div key={label} className="mb-8 border-b-2 pb-4">
+        {view === "weekly" ? (
+          <h6 className="w-full text-black text-center text-sm italic">
+            {getStartOfWeek(label)}
+          </h6>
+        ) : (
+          ""
+        )}
         <div className="flex items-center">
           <span className="w-12 text-black uppercase font-semibold">
             {label}
@@ -114,53 +127,68 @@ const Home = () => {
           </button>
         </div>
         <div className="bg-white p-4 rounded mt-4">
-          {data?.error ? renderError(data) : renderBars(data?.[view])}
+          {data?.error ? renderError(data) : renderBars(data?.[view], view)}
         </div>
       </div>
     );
   };
 
   return (
-    <main className="bg-black py-40 sm:py-24 mx-auto min-h-screen">
-      <div className="mx-auto max-w-2xl lg:text-center">
-        <h1 className="font-bold text-indigo-600">Stock Seasonality</h1>
-        <p className="mt-2 text-3xl font-bold tracking-tight text-white sm:text-4xl">
-          View monthly and weekly stock seasonality!
-        </p>
-        <p className="mt-9 leading-7 text-white">Just enter ticker(s) below.</p>
-        <p className="text-xs leading-7 text-white">
-          Symbols can be comma-separated or entered on a new line.
-        </p>
-      </div>
-      <div className="container xl mt-9 mx-auto p-12 bg-slate-700 rounded-xl shadow-lg text-white">
-        <form onSubmit={handleSubmit}>
-          <label className="block font-semibold" htmlFor="symbols">
-            Ticker Symbols
-          </label>
-          <textarea
-            className="block p-4 w-full mt-2 text-black"
-            id="symbols"
-            value={symbols}
-            onChange={(e) => setSymbols(e.target.value)}
-            required
-            rows={3}
-          />
-          <button
-            className="p-4 rounded mt-4 mb-4 w-36 bg-indigo-600 text-white"
-            type="submit"
-          >
-            Submit
-          </button>
-        </form>
-        {Object.keys(data).length > 0 && (
-          <div>
-            {Object.entries(data).map(([symbol, symbolData]) =>
-              renderSymbolData(symbol, symbolData)
-            )}
-          </div>
-        )}
-      </div>
-    </main>
+    <>
+      <nav className="bg-gray-800 p-4">
+        <Link
+          className="text-white px-4 active:border-b-2 active:border-indigo-600"
+          href="/"
+        >
+          Monthly and Weekly Seasonality
+        </Link>
+        <Link className="text-white px-4" href="/monthly-seasonality">
+          Best and Worst
+        </Link>
+      </nav>
+      <main className="bg-black py-40 sm:py-24 mx-auto min-h-screen">
+        <div className="mx-auto max-w-2xl lg:text-center">
+          <h1 className="font-bold text-indigo-600">Stock Seasonality</h1>
+          <p className="mt-2 text-3xl font-bold tracking-tight text-white sm:text-4xl">
+            View monthly and weekly stock seasonality!
+          </p>
+          <p className="mt-9 leading-7 text-white">
+            Just enter ticker(s) below.
+          </p>
+          <p className="text-xs leading-7 text-white">
+            Symbols can be comma-separated or entered on a new line.
+          </p>
+        </div>
+        <div className="container xl mt-9 mx-auto p-12 bg-slate-700 rounded-xl shadow-lg text-white">
+          <form onSubmit={handleSubmit}>
+            <label className="block font-semibold" htmlFor="symbols">
+              Ticker Symbols
+            </label>
+            <textarea
+              className="block p-4 w-full mt-2 text-black"
+              id="symbols"
+              value={symbols}
+              onChange={(e) => setSymbols(e.target.value)}
+              required
+              rows={3}
+            />
+            <button
+              className="p-4 rounded mt-4 mb-4 w-36 bg-indigo-600 text-white"
+              type="submit"
+            >
+              Submit
+            </button>
+          </form>
+          {Object.keys(data).length > 0 && (
+            <div>
+              {Object.entries(data).map(([symbol, symbolData]) =>
+                renderSymbolData(symbol, symbolData)
+              )}
+            </div>
+          )}
+        </div>
+      </main>
+    </>
   );
 };
 

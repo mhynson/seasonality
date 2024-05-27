@@ -1,0 +1,230 @@
+"use client";
+
+import { useState } from "react";
+import Link from "next/link";
+
+interface SeasonalityAverages {
+  [key: string]: {
+    averageChange: number;
+    lowerCloses: number;
+    higherCloses: number;
+    count: number;
+    higherPct: number;
+  };
+}
+
+interface SeasonalityData {
+  [key: string]: {
+    monthly: SeasonalityAverages;
+    weekly: SeasonalityAverages;
+  };
+}
+
+const monthNames: { [key: string]: string } = {
+  Jan: "January",
+  Feb: "February",
+  Mar: "March",
+  Apr: "April",
+  May: "May",
+  Jun: "June",
+  Jul: "July",
+  Aug: "August",
+  Sep: "September",
+  Oct: "October",
+  Nov: "November",
+  Dec: "December",
+};
+
+const getFullMonthName = (abbr: string) => monthNames[abbr] || abbr;
+
+const monthOrder = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+];
+
+const MonthlySeasonality = () => {
+  const [symbols, setSymbols] = useState("");
+  const [data, setData] = useState<SeasonalityData>({});
+  const [result, setResult] = useState<{
+    positive: { [key: string]: { symbol: string; higherPct: number }[] };
+    negative: { [key: string]: { symbol: string; higherPct: number }[] };
+  }>({ positive: {}, negative: {} });
+
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    const symbolsArray = symbols
+      .replace(/\n/g, ",")
+      .split(",")
+      .map((s) => s.trim())
+      .filter((s) => s);
+    const allData: SeasonalityData = {};
+
+    for (const symbol of symbolsArray) {
+      const response = await fetch(`/api/seasonality?ticker=${symbol}`);
+      const result = await response.json();
+      allData[symbol] = result;
+    }
+
+    setData(allData);
+    analyzeData(allData);
+  };
+
+  const analyzeData = (allData: SeasonalityData) => {
+    const positive: { [key: string]: { symbol: string; higherPct: number }[] } =
+      {};
+    const negative: { [key: string]: { symbol: string; higherPct: number }[] } =
+      {};
+
+    Object.entries(allData).forEach(([symbol, { monthly }]) => {
+      Object.entries(monthly).forEach(([month, stats]) => {
+        if (stats.higherPct >= 0.75) {
+          positive[month] = positive[month]
+            ? [...positive[month], { symbol, higherPct: stats.higherPct }]
+            : [{ symbol, higherPct: stats.higherPct }];
+        }
+        if (stats.higherPct <= 0.2) {
+          negative[month] = negative[month]
+            ? [...negative[month], { symbol, higherPct: stats.higherPct }]
+            : [{ symbol, higherPct: stats.higherPct }];
+        }
+      });
+    });
+
+    setResult({ positive, negative });
+  };
+
+  const sortedEntries = (
+    entries: [string, { symbol: string; higherPct: number }[]][]
+  ) =>
+    entries
+      .sort(([a], [b]) => monthOrder.indexOf(a) - monthOrder.indexOf(b))
+      .map(([month, stocks]) => [
+        month,
+        stocks.sort((a, b) => b.higherPct - a.higherPct),
+      ]);
+
+  return (
+    <>
+      <nav className="bg-gray-800 p-4">
+        <Link className="text-white px-4" href="/">
+          Monthly and Weekly Seasonality
+        </Link>
+        <Link className="text-white px-4" href="/monthly-seasonality">
+          Best and Worst
+        </Link>
+      </nav>
+      <main className="bg-black py-40 sm:py-24 mx-auto min-h-screen">
+        <div className="mx-auto max-w-2xl lg:text-center">
+          <h1 className="font-bold text-indigo-600">Best and Worst</h1>
+          <p className="mt-2 text-3xl font-bold tracking-tight text-white sm:text-4xl">
+            View the best and worst months for your stocks
+          </p>
+          <p className="mt-9 leading-7 text-white">
+            Symbols can be comma-separated or entered on a new line.
+          </p>
+        </div>
+
+        <div className="container xl mt-9 mx-auto p-12 bg-slate-700 rounded-xl shadow-lg text-white">
+          <form onSubmit={handleSubmit}>
+            <label className="block" htmlFor="symbols">
+              Ticker Symbols
+            </label>
+            <textarea
+              className="block p-4 w-full"
+              id="symbols"
+              value={symbols}
+              onChange={(e) => setSymbols(e.target.value)}
+              required
+              rows={3}
+            />
+            <button className="p-4 rounded bg-blue-100" type="submit">
+              Submit
+            </button>
+          </form>
+          {Object.keys(result.positive).length > 0 && (
+            <div>
+              <h2 className="text-xl font-bold mt-8">
+                Best Months (Positive Probability ≥ 75%)
+              </h2>
+              {sortedEntries(Object.entries(result.positive)).map(
+                ([month, stocks]) => (
+                  <div
+                    key={month}
+                    className="not-prose relative bg-indigo-600 rounded-xl overflow-hidden mb-8"
+                  >
+                    <h4 className="text-white p-4 block font-semibold text-center">
+                      {getFullMonthName(month)}
+                    </h4>
+                    <div className="shadow-sm overflow-hidden">
+                      <div className="relative rounded-xl overflow-auto">
+                        <table className="table-auto border-collapse table-auto w-full text-sm mt-4">
+                          <thead>
+                            <tr>
+                              <th className="border-b bg-indigo-600 font-medium p-4 pl-8 pt-0 pb-3 text-white text-left">
+                                Ticker
+                              </th>
+                              <th className="border-b bg-indigo-600 font-medium p-4 pl-8 pt-0 pb-3 text-white text-left">
+                                Chance of Being Up
+                              </th>
+                              <th className="border-b bg-indigo-600 font-medium p-4 pl-8 pt-0 pb-3 text-white text-left">
+                                Average Range
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody className="bg-white dark:bg-slate-800">
+                            {stocks.map((stock) => (
+                              <tr key={stock.symbol}>
+                                <td className="uppercase border-b border-slate-100 dark:border-slate-700 p-4 pl-8 text-slate-500 dark:text-slate-400">
+                                  {stock.symbol}
+                                </td>
+                                <td className="border-b border-slate-100 dark:border-slate-700 p-4 pl-8 text-slate-500 dark:text-slate-400">
+                                  {(stock.higherPct * 100).toFixed(2)}%
+                                </td>
+                                <td className="border-b border-slate-100 dark:border-slate-700 p-4 pl-8 text-slate-500 dark:text-slate-400">
+                                  {stock.range || "n/a"}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+                )
+              )}
+              <h2 className="text-xl font-bold mt-8">
+                Worst Months (Positive Probability ≤ 20%)
+              </h2>
+              {sortedEntries(Object.entries(result.negative)).map(
+                ([month, stocks]) => (
+                  <div key={month} className="mt-4">
+                    <h3 className="font-bold">{month}</h3>
+                    <ul className="list-disc list-inside">
+                      {stocks.map((stock) => (
+                        <li key={stock.symbol}>
+                          {stock.symbol} ({(stock.higherPct * 100).toFixed(2)}%)
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )
+              )}
+            </div>
+          )}
+        </div>
+      </main>
+    </>
+  );
+};
+
+export default MonthlySeasonality;
