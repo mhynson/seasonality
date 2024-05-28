@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { getStartOfWeek } from "../api/seasonality/utils";
 
 interface SeasonalityAverages {
   [key: string]: {
@@ -20,39 +21,7 @@ interface SeasonalityData {
   };
 }
 
-const monthNames: { [key: string]: string } = {
-  Jan: "January",
-  Feb: "February",
-  Mar: "March",
-  Apr: "April",
-  May: "May",
-  Jun: "June",
-  Jul: "July",
-  Aug: "August",
-  Sep: "September",
-  Oct: "October",
-  Nov: "November",
-  Dec: "December",
-};
-
-const getFullMonthName = (abbr: string) => monthNames[abbr] || abbr;
-
-const monthOrder = [
-  "Jan",
-  "Feb",
-  "Mar",
-  "Apr",
-  "May",
-  "Jun",
-  "Jul",
-  "Aug",
-  "Sep",
-  "Oct",
-  "Nov",
-  "Dec",
-];
-
-const MonthlySeasonality = () => {
+const WeeklySeasonality = () => {
   const [symbols, setSymbols] = useState("");
   const [data, setData] = useState<SeasonalityData>({});
   const [result, setResult] = useState<{
@@ -70,7 +39,9 @@ const MonthlySeasonality = () => {
     const allData: SeasonalityData = {};
 
     for (const symbol of symbolsArray) {
-      const response = await fetch(`/api/seasonality?ticker=${symbol}`);
+      const response = await fetch(
+        `/api/seasonality?ticker=${symbol}&type=weekly`
+      );
       const result = await response.json();
       allData[symbol] = result;
     }
@@ -85,16 +56,16 @@ const MonthlySeasonality = () => {
     const negative: { [key: string]: { symbol: string; higherPct: number }[] } =
       {};
 
-    Object.entries(allData).forEach(([symbol, { monthly }]) => {
-      Object.entries(monthly).forEach(([month, stats]) => {
+    Object.entries(allData).forEach(([symbol, { weekly }]) => {
+      Object.entries(weekly).forEach(([week, stats]) => {
         if (stats.higherPct >= 0.75) {
-          positive[month] = positive[month]
-            ? [...positive[month], { symbol, higherPct: stats.higherPct }]
+          positive[week] = positive[week]
+            ? [...positive[week], { symbol, higherPct: stats.higherPct }]
             : [{ symbol, higherPct: stats.higherPct }];
         }
         if (stats.higherPct <= 0.2) {
-          negative[month] = negative[month]
-            ? [...negative[month], { symbol, higherPct: stats.higherPct }]
+          negative[week] = negative[week]
+            ? [...negative[week], { symbol, higherPct: stats.higherPct }]
             : [{ symbol, higherPct: stats.higherPct }];
         }
       });
@@ -107,9 +78,9 @@ const MonthlySeasonality = () => {
     entries: [string, { symbol: string; higherPct: number }[]][]
   ) =>
     entries
-      .sort(([a], [b]) => monthOrder.indexOf(a) - monthOrder.indexOf(b))
-      .map(([month, stocks]) => [
-        month,
+      .sort(([a], [b]) => parseInt(a) - parseInt(b))
+      .map(([week, stocks]) => [
+        week,
         stocks.sort((a, b) => b.higherPct - a.higherPct),
       ]);
 
@@ -119,15 +90,18 @@ const MonthlySeasonality = () => {
         <Link className="text-white px-4" href="/">
           Monthly and Weekly Seasonality
         </Link>
-        <Link className="text-white px-4" href="/monthly-seasonality">
-          Best and Worst
+        <Link className="text-white px-4" href="/best-worst-months">
+          Best and Worst Months
+        </Link>
+        <Link className="text-white px-4" href="/best-worst-weeks">
+          Best and Worst Weeks
         </Link>
       </nav>
       <main className="bg-black py-40 sm:py-24 mx-auto min-h-screen">
         <div className="mx-auto max-w-2xl lg:text-center">
           <h1 className="font-bold text-indigo-600">Best and Worst</h1>
           <p className="mt-2 text-3xl font-bold tracking-tight text-white sm:text-4xl">
-            View the best and worst months for your stocks
+            View the best and worst weeks for your stocks
           </p>
           <p className="mt-9 leading-7 text-white">
             Symbols can be comma-separated or entered on a new line.
@@ -157,16 +131,16 @@ const MonthlySeasonality = () => {
           {Object.keys(result.positive).length > 0 && (
             <div>
               <h2 className="text-xl font-bold mt-8">
-                Best Months (Positive Probability ≥ 75%)
+                Best Weeks (Positive Probability ≥ 75%)
               </h2>
               {sortedEntries(Object.entries(result.positive)).map(
-                ([month, stocks]) => (
+                ([week, stocks]) => (
                   <div
-                    key={month}
+                    key={week}
                     className="not-prose relative bg-indigo-600 rounded-xl overflow-hidden mb-8"
                   >
                     <h4 className="text-white p-4 block font-semibold text-center">
-                      {getFullMonthName(month)}
+                      Week {parseFloat(week) + 1} / {getStartOfWeek(week)}
                     </h4>
                     <div className="shadow-sm overflow-hidden">
                       <div className="relative rounded-xl overflow-auto">
@@ -205,20 +179,56 @@ const MonthlySeasonality = () => {
                   </div>
                 )
               )}
+            </div>
+          )}
+          {Object.keys(result.negative).length > 0 && (
+            <div>
               <h2 className="text-xl font-bold mt-8">
-                Worst Months (Positive Probability ≤ 20%)
+                Worst Weeks (Positive Probability ≤ 20%)
               </h2>
               {sortedEntries(Object.entries(result.negative)).map(
-                ([month, stocks]) => (
-                  <div key={month} className="mt-4">
-                    <h3 className="font-bold">{month}</h3>
-                    <ul className="list-disc list-inside">
-                      {stocks.map((stock) => (
-                        <li key={stock.symbol}>
-                          {stock.symbol} ({(stock.higherPct * 100).toFixed(2)}%)
-                        </li>
-                      ))}
-                    </ul>
+                ([week, stocks]) => (
+                  <div
+                    key={week}
+                    className="not-prose relative bg-indigo-600 rounded-xl overflow-hidden mb-8"
+                  >
+                    <h4 className="text-white p-4 block font-semibold text-center">
+                      Week {parseFloat(week) + 1} / {getStartOfWeek(week)}
+                    </h4>
+                    <div className="shadow-sm overflow-hidden">
+                      <div className="relative rounded-xl overflow-auto">
+                        <table className="table-auto border-collapse table-auto w-full text-sm mt-4">
+                          <thead>
+                            <tr>
+                              <th className="border-b bg-indigo-600 font-medium p-4 pl-8 pt-0 pb-3 text-white text-left">
+                                Ticker
+                              </th>
+                              <th className="border-b bg-indigo-600 font-medium p-4 pl-8 pt-0 pb-3 text-white text-left">
+                                Chance of Being Up
+                              </th>
+                              <th className="border-b bg-indigo-600 font-medium p-4 pl-8 pt-0 pb-3 text-white text-left">
+                                Average Range
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody className="bg-white dark:bg-slate-800">
+                            {stocks.map((stock) => (
+                              <tr key={stock.symbol}>
+                                <td className="uppercase border-b border-slate-100 dark:border-slate-700 p-4 pl-8 text-slate-500 dark:text-slate-400">
+                                  {stock.symbol}
+                                </td>
+                                <td className="border-b border-slate-100 dark:border-slate-700 p-4 pl-8 text-slate-500 dark:text-slate-400">
+                                  {(stock.higherPct * 100).toFixed(2)}%
+                                </td>
+                                <td className="border-b border-slate-100 dark:border-slate-700 p-4 pl-8 text-slate-500 dark:text-slate-400">
+                                  {stock.range || "n/a"}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
                   </div>
                 )
               )}
@@ -230,4 +240,4 @@ const MonthlySeasonality = () => {
   );
 };
 
-export default MonthlySeasonality;
+export default WeeklySeasonality;

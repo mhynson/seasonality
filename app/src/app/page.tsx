@@ -65,7 +65,7 @@ const Home = () => {
         )}
         <div className="flex items-center">
           <span className="w-12 text-black uppercase font-semibold">
-            {label}
+            {view === "weekly" ? parseFloat(label) + 1 : label}
           </span>
           <div
             className="flex items-center bg-gradient-to-r from-blue-500 to-red-400 h-8 rounded"
@@ -142,8 +142,11 @@ const Home = () => {
         >
           Monthly and Weekly Seasonality
         </Link>
-        <Link className="text-white px-4" href="/monthly-seasonality">
-          Best and Worst
+        <Link className="text-white px-4" href="/best-worst-months">
+          Best and Worst Months
+        </Link>
+        <Link className="text-white px-4" href="/best-worst-weeks">
+          Best and Worst Weeks
         </Link>
       </nav>
       <main className="bg-black py-40 sm:py-24 mx-auto min-h-screen">
