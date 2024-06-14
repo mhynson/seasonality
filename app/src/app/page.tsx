@@ -3,9 +3,11 @@
 import { useState } from "react";
 import {
   SeasonalityAverageEntry,
-  getStartOfWeek,
+  cleanSymbolList,
 } from "./api/seasonality/utils";
 import Link from "next/link";
+import { ErrorMessage } from "./components/ErrorMessage";
+import { SeasonalityBars } from "./components/SeasonalityBars";
 interface SeasonalityAverages {
   [key: string]: SeasonalityAverageEntry;
 }
@@ -28,12 +30,8 @@ const Home = () => {
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    const symbolsArray = symbols
-      .replace(/\n/g, ",")
-      .split(",")
-      .map((s) => s.trim())
-      .filter((s) => s);
 
+    const symbolsArray = cleanSymbolList(symbols);
     const allData: { [symbol: string]: SymbolData } = {};
 
     for (const symbol of symbolsArray) {
@@ -43,49 +41,6 @@ const Home = () => {
     }
 
     setData(allData);
-  };
-
-  const renderError = ({ error }: { error: string }) => (
-    <p className="text-black">{error}</p>
-  );
-
-  const renderBars = (
-    seasonalityData: SeasonalityAverages,
-    view: "weekly" | "monthly"
-  ) => {
-    if (!seasonalityData) return <></>;
-    return Object.entries(seasonalityData).map(([label, stats]) => (
-      <div key={label} className="mb-8 border-b-2 pb-4">
-        {view === "weekly" ? (
-          <h6 className="w-full text-black text-center text-sm italic">
-            {getStartOfWeek(label)}
-          </h6>
-        ) : (
-          ""
-        )}
-        <div className="flex items-center">
-          <span className="w-12 text-black uppercase font-semibold">
-            {view === "weekly" ? parseFloat(label) + 1 : label}
-          </span>
-          <div
-            className="flex items-center bg-gradient-to-r from-blue-500 to-red-400 h-8 rounded"
-            style={{ width: `${stats.higherPct * 100}%` }}
-          >
-            <span
-              className={`text-xs pl-2 ${
-                stats.higherPct ? "text-white" : "text-black"
-              }`}
-            >
-              {(stats.higherPct * 100).toFixed(2)}%
-            </span>
-          </div>
-        </div>
-        <div className="text-right ml-2 text-xs italic text-black">
-          Average % Change: {(stats.averageChange * 100).toPrecision(2)}% |
-          Average Range: ${stats.averageRange.toFixed(2)}
-        </div>
-      </div>
-    ));
   };
 
   const renderSymbolData = (symbol: string, symbolData: SymbolData) => {
@@ -127,7 +82,11 @@ const Home = () => {
           </button>
         </div>
         <div className="bg-white p-4 rounded mt-4">
-          {data?.error ? renderError(data) : renderBars(data?.[view], view)}
+          {data?.error ? (
+            <ErrorMessage error={data.error} />
+          ) : (
+            <SeasonalityBars view={view} seasonalityData={data?.[view]} />
+          )}
         </div>
       </div>
     );
