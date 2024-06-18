@@ -20,13 +20,39 @@ interface ISeasonalityBarsProps {
   view: "weekly" | "monthly";
 }
 
+const monthOrder = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+];
+
 export const SeasonalityBars = ({
   seasonalityData,
   view,
 }: ISeasonalityBarsProps) => {
   if (!seasonalityData) return <></>;
 
-  return Object.entries(seasonalityData).map(([label, stats]) => (
+  const sortedSeasonalityData = Object.entries(seasonalityData).sort((a, b) => {
+    const labelA = a[0];
+    const labelB = b[0];
+    if (monthOrder.indexOf(labelA) < 0) {
+      if (!isNaN(parseFloat(labelA)))
+        return parseFloat(labelB) - parseFloat(labelB);
+      return 0;
+    }
+    return monthOrder.indexOf(labelA) - monthOrder.indexOf(labelB);
+  });
+
+  return sortedSeasonalityData.map(([label, stats]) => (
     <div key={label} className="mb-8 border-b-2 pb-4">
       <SectionHeading view={view} label={label} />
 
