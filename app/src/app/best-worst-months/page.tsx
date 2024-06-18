@@ -5,6 +5,7 @@ import Link from "next/link";
 
 interface SeasonalityAverages {
   [key: string]: {
+    label?: string;
     averageChange: number;
     lowerCloses: number;
     higherCloses: number;
@@ -59,6 +60,7 @@ const MonthlySeasonality = () => {
     positive: { [key: string]: { symbol: string; higherPct: number }[] };
     negative: { [key: string]: { symbol: string; higherPct: number }[] };
   }>({ positive: {}, negative: {} });
+  const [activeTab, setActiveTab] = useState("positive");
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -159,111 +161,142 @@ const MonthlySeasonality = () => {
               Submit
             </button>
           </form>
-          {Object.keys(result.positive).length > 0 && (
+          {Object.keys(result.positive).length > 0 ||
+          Object.keys(result.negative).length > 0 ? (
             <div>
-              <h2 className="text-xl font-bold mt-8">
-                Best Months (Positive Probability ≥ 75%)
-              </h2>
-              {sortedEntries(Object.entries(result.positive)).map(
-                ([month, stocks]) => (
-                  <div
-                    key={month}
-                    className="not-prose relative bg-indigo-600 rounded-xl overflow-hidden mb-8"
+              <div className="flex justify-center mt-8">
+                {Object.keys(result.positive).length > 0 && (
+                  <button
+                    className={`p-4 rounded-l bg-indigo-600 text-white ${
+                      activeTab === "positive" ? "bg-indigo-800" : ""
+                    }`}
+                    onClick={() => setActiveTab("positive")}
                   >
-                    <h4 className="text-white p-4 block font-semibold text-center">
-                      {getFullMonthName(month)}
-                    </h4>
-                    <div className="shadow-sm overflow-hidden">
-                      <div className="relative rounded-xl overflow-auto">
-                        <table className="table-auto border-collapse table-auto w-full text-sm mt-4">
-                          <thead>
-                            <tr>
-                              <th className="border-b bg-indigo-600 font-medium p-4 pl-8 pt-0 pb-3 text-white text-left">
-                                Ticker
-                              </th>
-                              <th className="border-b bg-indigo-600 font-medium p-4 pl-8 pt-0 pb-3 text-white text-left">
-                                Chance of Being Up
-                              </th>
-                              <th className="border-b bg-indigo-600 font-medium p-4 pl-8 pt-0 pb-3 text-white text-left">
-                                Average Range
-                              </th>
-                            </tr>
-                          </thead>
-                          <tbody className="bg-white dark:bg-slate-800">
-                            {stocks.map((stock) => (
-                              <tr key={stock.symbol}>
-                                <td className="uppercase border-b border-slate-100 dark:border-slate-700 p-4 pl-8 text-slate-500 dark:text-slate-400">
-                                  {stock.symbol}
-                                </td>
-                                <td className="border-b border-slate-100 dark:border-slate-700 p-4 pl-8 text-slate-500 dark:text-slate-400">
-                                  {(stock.higherPct * 100).toFixed(2)}%
-                                </td>
-                                <td className="border-b border-slate-100 dark:border-slate-700 p-4 pl-8 text-slate-500 dark:text-slate-400">
-                                  {stock.range || "n/a"}
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-                  </div>
-                )
-              )}
-            </div>
-          )}
-          {Object.keys(result.negative).length > 0 && (
-            <div>
-              <h2 className="text-xl font-bold mt-8">
-                Worst Months (Positive Probability ≤ 20%)
-              </h2>
-              {sortedEntries(Object.entries(result.negative)).map(
-                ([month, stocks]) => (
-                  <div
-                    key={month}
-                    className="not-prose relative bg-indigo-600 rounded-xl overflow-hidden mb-8"
+                    Best Months
+                  </button>
+                )}
+                {Object.keys(result.negative).length > 0 && (
+                  <button
+                    className={`p-4 rounded-r bg-indigo-600 text-white ${
+                      activeTab === "negative" ? "bg-indigo-800" : ""
+                    }`}
+                    onClick={() => setActiveTab("negative")}
                   >
-                    <h4 className="text-white p-4 block font-semibold text-center">
-                      {getFullMonthName(month)}
-                    </h4>
-                    <div className="shadow-sm overflow-hidden">
-                      <div className="relative rounded-xl overflow-auto">
-                        <table className="table-auto border-collapse table-auto w-full text-sm mt-4">
-                          <thead>
-                            <tr>
-                              <th className="border-b bg-indigo-600 font-medium p-4 pl-8 pt-0 pb-3 text-white text-left">
-                                Ticker
-                              </th>
-                              <th className="border-b bg-indigo-600 font-medium p-4 pl-8 pt-0 pb-3 text-white text-left">
-                                Chance of Being Up
-                              </th>
-                              <th className="border-b bg-indigo-600 font-medium p-4 pl-8 pt-0 pb-3 text-white text-left">
-                                Average Range
-                              </th>
-                            </tr>
-                          </thead>
-                          <tbody className="bg-white dark:bg-slate-800">
-                            {stocks.map((stock) => (
-                              <tr key={stock.symbol}>
-                                <td className="uppercase border-b border-slate-100 dark:border-slate-700 p-4 pl-8 text-slate-500 dark:text-slate-400">
-                                  {stock.symbol}
-                                </td>
-                                <td className="border-b border-slate-100 dark:border-slate-700 p-4 pl-8 text-slate-500 dark:text-slate-400">
-                                  {(stock.higherPct * 100).toFixed(2)}%
-                                </td>
-                                <td className="border-b border-slate-100 dark:border-slate-700 p-4 pl-8 text-slate-500 dark:text-slate-400">
-                                  {stock.range || "n/a"}
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
+                    Worst Months
+                  </button>
+                )}
+              </div>
+              {activeTab === "positive" &&
+                Object.keys(result.positive).length > 0 && (
+                  <div>
+                    <h2 className="text-xl font-bold mt-8">
+                      Best Months (Positive Probability ≥ 75%)
+                    </h2>
+                    {sortedEntries(Object.entries(result.positive)).map(
+                      ([month, stocks]) => (
+                        <div
+                          key={month}
+                          className="not-prose relative bg-indigo-600 rounded-xl overflow-hidden mb-8"
+                        >
+                          <h4 className="text-white p-4 block font-semibold text-center">
+                            {getFullMonthName(month)}
+                          </h4>
+                          <div className="shadow-sm overflow-hidden">
+                            <div className="relative rounded-xl overflow-auto">
+                              <table className="table-auto border-collapse table-auto w-full text-sm mt-4">
+                                <thead>
+                                  <tr>
+                                    <th className="border-b bg-indigo-600 font-medium p-4 pl-8 pt-0 pb-3 text-white text-left">
+                                      Ticker
+                                    </th>
+                                    <th className="border-b bg-indigo-600 font-medium p-4 pl-8 pt-0 pb-3 text-white text-left">
+                                      Chance of Being Up
+                                    </th>
+                                    <th className="border-b bg-indigo-600 font-medium p-4 pl-8 pt-0 pb-3 text-white text-left">
+                                      Average Range
+                                    </th>
+                                  </tr>
+                                </thead>
+                                <tbody className="bg-white dark:bg-slate-800">
+                                  {stocks.map((stock) => (
+                                    <tr key={stock.symbol}>
+                                      <td className="uppercase border-b border-slate-100 dark:border-slate-700 p-4 pl-8 text-slate-500 dark:text-slate-400">
+                                        {stock.symbol}
+                                      </td>
+                                      <td className="border-b border-slate-100 dark:border-slate-700 p-4 pl-8 text-slate-500 dark:text-slate-400">
+                                        {(stock.higherPct * 100).toFixed(2)}%
+                                      </td>
+                                      <td className="border-b border-slate-100 dark:border-slate-700 p-4 pl-8 text-slate-500 dark:text-slate-400">
+                                        {stock.range || "n/a"}
+                                      </td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    )}
                   </div>
-                )
-              )}
+                )}
+              {activeTab === "negative" &&
+                Object.keys(result.negative).length > 0 && (
+                  <div>
+                    <h2 className="text-xl font-bold mt-8">
+                      Worst Months (Positive Probability ≤ 20%)
+                    </h2>
+                    {sortedEntries(Object.entries(result.negative)).map(
+                      ([month, stocks]) => (
+                        <div
+                          key={month}
+                          className="not-prose relative bg-indigo-600 rounded-xl overflow-hidden mb-8"
+                        >
+                          <h4 className="text-white p-4 block font-semibold text-center">
+                            {getFullMonthName(month)}
+                          </h4>
+                          <div className="shadow-sm overflow-hidden">
+                            <div className="relative rounded-xl overflow-auto">
+                              <table className="table-auto border-collapse table-auto w-full text-sm mt-4">
+                                <thead>
+                                  <tr>
+                                    <th className="border-b bg-indigo-600 font-medium p-4 pl-8 pt-0 pb-3 text-white text-left">
+                                      Ticker
+                                    </th>
+                                    <th className="border-b bg-indigo-600 font-medium p-4 pl-8 pt-0 pb-3 text-white text-left">
+                                      Chance of Being Up
+                                    </th>
+                                    <th className="border-b bg-indigo-600 font-medium p-4 pl-8 pt-0 pb-3 text-white text-left">
+                                      Average Range
+                                    </th>
+                                  </tr>
+                                </thead>
+                                <tbody className="bg-white dark:bg-slate-800">
+                                  {stocks.map((stock) => (
+                                    <tr key={stock.symbol}>
+                                      <td className="uppercase border-b border-slate-100 dark:border-slate-700 p-4 pl-8 text-slate-500 dark:text-slate-400">
+                                        {stock.symbol}
+                                      </td>
+                                      <td className="border-b border-slate-100 dark:border-slate-700 p-4 pl-8 text-slate-500 dark:text-slate-400">
+                                        {(stock.higherPct * 100).toFixed(2)}%
+                                      </td>
+                                      <td className="border-b border-slate-100 dark:border-slate-700 p-4 pl-8 text-slate-500 dark:text-slate-400">
+                                        {stock.range || "n/a"}
+                                      </td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    )}
+                  </div>
+                )}
             </div>
+          ) : (
+            <p className="text-white">No results to display.</p>
           )}
         </div>
       </main>

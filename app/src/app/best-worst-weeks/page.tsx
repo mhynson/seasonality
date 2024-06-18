@@ -6,6 +6,7 @@ import { getStartOfWeek } from "../api/seasonality/utils";
 
 interface SeasonalityAverages {
   [key: string]: {
+    label?: string;
     averageChange: number;
     lowerCloses: number;
     higherCloses: number;
@@ -28,6 +29,7 @@ const WeeklySeasonality = () => {
     positive: { [key: string]: { symbol: string; higherPct: number }[] };
     negative: { [key: string]: { symbol: string; higherPct: number }[] };
   }>({ positive: {}, negative: {} });
+  const [activeTab, setActiveTab] = useState("positive");
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -84,6 +86,57 @@ const WeeklySeasonality = () => {
         stocks.sort((a, b) => b.higherPct - a.higherPct),
       ]);
 
+  const renderTable = (
+    entries: [string, { symbol: string; higherPct: number }[]][]
+  ) => (
+    <>
+      {sortedEntries(entries).map(([week, stocks]) => (
+        <div
+          key={week}
+          className="not-prose relative bg-indigo-600 rounded-xl overflow-hidden mb-8"
+        >
+          <h4 className="text-white p-4 block font-semibold text-center">
+            Week {parseFloat(week) + 1} / {getStartOfWeek(week)}
+          </h4>
+          <div className="shadow-sm overflow-hidden">
+            <div className="relative rounded-xl overflow-auto">
+              <table className="table-auto border-collapse table-auto w-full text-sm mt-4">
+                <thead>
+                  <tr>
+                    <th className="border-b bg-indigo-600 font-medium p-4 pl-8 pt-0 pb-3 text-white text-left">
+                      Ticker
+                    </th>
+                    <th className="border-b bg-indigo-600 font-medium p-4 pl-8 pt-0 pb-3 text-white text-left">
+                      Chance of Being Up
+                    </th>
+                    <th className="border-b bg-indigo-600 font-medium p-4 pl-8 pt-0 pb-3 text-white text-left">
+                      Average Range
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white dark:bg-slate-800">
+                  {stocks.map((stock) => (
+                    <tr key={stock.symbol}>
+                      <td className="uppercase border-b border-slate-100 dark:border-slate-700 p-4 pl-8 text-slate-500 dark:text-slate-400">
+                        {stock.symbol}
+                      </td>
+                      <td className="border-b border-slate-100 dark:border-slate-700 p-4 pl-8 text-slate-500 dark:text-slate-400">
+                        {(stock.higherPct * 100).toFixed(2)}%
+                      </td>
+                      <td className="border-b border-slate-100 dark:border-slate-700 p-4 pl-8 text-slate-500 dark:text-slate-400">
+                        {stock.range || "n/a"}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      ))}
+    </>
+  );
+
   return (
     <>
       <nav className="bg-gray-800 p-4">
@@ -128,112 +181,44 @@ const WeeklySeasonality = () => {
               Submit
             </button>
           </form>
-          {Object.keys(result.positive).length > 0 && (
-            <div>
-              <h2 className="text-xl font-bold mt-8">
-                Best Weeks (Positive Probability ≥ 75%)
-              </h2>
-              {sortedEntries(Object.entries(result.positive)).map(
-                ([week, stocks]) => (
-                  <div
-                    key={week}
-                    className="not-prose relative bg-indigo-600 rounded-xl overflow-hidden mb-8"
-                  >
-                    <h4 className="text-white p-4 block font-semibold text-center">
-                      Week {parseFloat(week) + 1} / {getStartOfWeek(week)}
-                    </h4>
-                    <div className="shadow-sm overflow-hidden">
-                      <div className="relative rounded-xl overflow-auto">
-                        <table className="table-auto border-collapse table-auto w-full text-sm mt-4">
-                          <thead>
-                            <tr>
-                              <th className="border-b bg-indigo-600 font-medium p-4 pl-8 pt-0 pb-3 text-white text-left">
-                                Ticker
-                              </th>
-                              <th className="border-b bg-indigo-600 font-medium p-4 pl-8 pt-0 pb-3 text-white text-left">
-                                Chance of Being Up
-                              </th>
-                              <th className="border-b bg-indigo-600 font-medium p-4 pl-8 pt-0 pb-3 text-white text-left">
-                                Average Range
-                              </th>
-                            </tr>
-                          </thead>
-                          <tbody className="bg-white dark:bg-slate-800">
-                            {stocks.map((stock) => (
-                              <tr key={stock.symbol}>
-                                <td className="uppercase border-b border-slate-100 dark:border-slate-700 p-4 pl-8 text-slate-500 dark:text-slate-400">
-                                  {stock.symbol}
-                                </td>
-                                <td className="border-b border-slate-100 dark:border-slate-700 p-4 pl-8 text-slate-500 dark:text-slate-400">
-                                  {(stock.higherPct * 100).toFixed(2)}%
-                                </td>
-                                <td className="border-b border-slate-100 dark:border-slate-700 p-4 pl-8 text-slate-500 dark:text-slate-400">
-                                  {stock.range || "n/a"}
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-                  </div>
-                )
-              )}
-            </div>
-          )}
-          {Object.keys(result.negative).length > 0 && (
-            <div>
-              <h2 className="text-xl font-bold mt-8">
-                Worst Weeks (Positive Probability ≤ 20%)
-              </h2>
-              {sortedEntries(Object.entries(result.negative)).map(
-                ([week, stocks]) => (
-                  <div
-                    key={week}
-                    className="not-prose relative bg-indigo-600 rounded-xl overflow-hidden mb-8"
-                  >
-                    <h4 className="text-white p-4 block font-semibold text-center">
-                      Week {parseFloat(week) + 1} / {getStartOfWeek(week)}
-                    </h4>
-                    <div className="shadow-sm overflow-hidden">
-                      <div className="relative rounded-xl overflow-auto">
-                        <table className="table-auto border-collapse table-auto w-full text-sm mt-4">
-                          <thead>
-                            <tr>
-                              <th className="border-b bg-indigo-600 font-medium p-4 pl-8 pt-0 pb-3 text-white text-left">
-                                Ticker
-                              </th>
-                              <th className="border-b bg-indigo-600 font-medium p-4 pl-8 pt-0 pb-3 text-white text-left">
-                                Chance of Being Up
-                              </th>
-                              <th className="border-b bg-indigo-600 font-medium p-4 pl-8 pt-0 pb-3 text-white text-left">
-                                Average Range
-                              </th>
-                            </tr>
-                          </thead>
-                          <tbody className="bg-white dark:bg-slate-800">
-                            {stocks.map((stock) => (
-                              <tr key={stock.symbol}>
-                                <td className="uppercase border-b border-slate-100 dark:border-slate-700 p-4 pl-8 text-slate-500 dark:text-slate-400">
-                                  {stock.symbol}
-                                </td>
-                                <td className="border-b border-slate-100 dark:border-slate-700 p-4 pl-8 text-slate-500 dark:text-slate-400">
-                                  {(stock.higherPct * 100).toFixed(2)}%
-                                </td>
-                                <td className="border-b border-slate-100 dark:border-slate-700 p-4 pl-8 text-slate-500 dark:text-slate-400">
-                                  {stock.range || "n/a"}
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-                  </div>
-                )
-              )}
-            </div>
-          )}
+
+          <div className="mt-8">
+            <button
+              className={`p-2 m-2 rounded ${
+                activeTab === "positive" ? "bg-indigo-600" : "bg-gray-500"
+              } text-white`}
+              onClick={() => setActiveTab("positive")}
+            >
+              Best Weeks
+            </button>
+            <button
+              className={`p-2 m-2 rounded ${
+                activeTab === "negative" ? "bg-indigo-600" : "bg-gray-500"
+              } text-white`}
+              onClick={() => setActiveTab("negative")}
+            >
+              Worst Weeks
+            </button>
+          </div>
+
+          {activeTab === "positive" &&
+            Object.keys(result.positive).length > 0 && (
+              <div>
+                <h2 className="text-xl font-bold mt-8">
+                  Best Weeks (Positive Probability ≥ 75%)
+                </h2>
+                {renderTable(Object.entries(result.positive))}
+              </div>
+            )}
+          {activeTab === "negative" &&
+            Object.keys(result.negative).length > 0 && (
+              <div>
+                <h2 className="text-xl font-bold mt-8">
+                  Worst Weeks (Positive Probability ≤ 20%)
+                </h2>
+                {renderTable(Object.entries(result.negative))}
+              </div>
+            )}
         </div>
       </main>
     </>

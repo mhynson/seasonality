@@ -9,6 +9,7 @@ interface HistoricalRowHistory {
 }
 
 export interface SeasonalityAverageEntry {
+  label?: string;
   averageChange: number;
   averageRange: number;
   changes: PercentChangeDataForPeriod[];
@@ -112,23 +113,22 @@ export const calculateSeasonality = (
       range: Math.abs(high - low),
       change: (close - open) / open,
     }))
-    .reduce<SeasonalityData>(
-      (acc, { label, change, range, date, open, close }) => {
-        const entry: SeasonalityEntry = {
-          up: change * 100 >= 0,
-          change,
-          open,
-          close,
-          range,
-          date: date.toISOString(),
-        };
-        return {
-          ...acc,
-          [label]: acc[label] ? [...acc[label], entry] : [entry],
-        };
-      },
-      {}
-    );
+    .reduce<SeasonalityData>((acc, data) => {
+      const { label, change, range, date, open, close } = data;
+
+      const entry: SeasonalityEntry = {
+        up: change * 100 >= 0,
+        change,
+        open,
+        close,
+        range,
+        date: date.toISOString(),
+      };
+      return {
+        ...acc,
+        [label]: acc[label] ? [...acc[label], entry] : [entry],
+      };
+    }, {});
 
   // Calculate seasonality averages
   const seasonalityAverages = Object.entries(
@@ -145,6 +145,7 @@ export const calculateSeasonality = (
     return {
       ...acc,
       [label]: {
+        label,
         averageChange,
         averageRange,
         lowerCloses,
