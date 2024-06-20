@@ -1,3 +1,5 @@
+import { monthNames } from "@/app/constants";
+
 interface HistoricalRowHistory {
   date: Date;
   open: number;
@@ -168,3 +170,16 @@ export const cleanSymbolList = (symbols: string): string[] =>
     .split(",")
     .map((s) => s.trim())
     .filter((s) => s);
+
+export const getFullMonthName = (abbr: string) => monthNames[abbr] || abbr;
+
+export const getLabelForTimeframe = (
+  initialLabel: string,
+  timeframe: string
+) => {
+  return timeframe === "monthly"
+    ? getFullMonthName(initialLabel)
+    : timeframe === "weekly"
+    ? `Week ${initialLabel} / ${getStartOfWeek(initialLabel)}`
+    : initialLabel;
+};
