@@ -1,24 +1,39 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
+import { LINKS as links, THRESHOLD_LOWER, THRESHOLD_UPPER } from "../constants";
+import { GlobalNav } from "../components/GlobalNav";
+import { TickerSymbolForm } from "../components/TickerSymbolForm";
+import { BestWorstHeader } from "../components/BestWorstHeader";
+import { ButtonTabs } from "../components/ButtonTabs";
+import { TickerTable } from "./TickerTable";
+import { cleanSymbolList } from "../api/seasonality/utils";
 
+interface ChangeData {
+  up: boolean;
+  change: number;
+  open: number;
+  close: number;
+  range: number;
+  date: string;
+}
 interface SeasonalityAverages {
-  [key: string]: {
-    label?: string;
-    averageChange: number;
-    lowerCloses: number;
-    higherCloses: number;
-    count: number;
-    higherPct: number;
-  };
+  label: string;
+  averageChange: number;
+  averageRange: number;
+  lowerCloses: number;
+  higherCloses: number;
+  count: number;
+  higherPct: number;
+  changes: ChangeData;
 }
 
+interface SeasonalityResults {
+  [key: string]: SeasonalityData[];
+}
 interface SeasonalityData {
-  [key: string]: {
-    monthly: SeasonalityAverages;
-    weekly: SeasonalityAverages;
-  };
+  timeframe: "weekly" | "monthly";
+  results: SeasonalityAverages[];
 }
 
 const monthNames: { [key: string]: string } = {
@@ -55,25 +70,21 @@ const monthOrder = [
 
 const MonthlySeasonality = () => {
   const [symbols, setSymbols] = useState("");
-  const [data, setData] = useState<SeasonalityData>({});
+  const [data, setData] = useState<SeasonalityResults>([]);
   const [result, setResult] = useState<{
-    positive: { [key: string]: { symbol: string; higherPct: number }[] };
-    negative: { [key: string]: { symbol: string; higherPct: number }[] };
-  }>({ positive: {}, negative: {} });
-  const [activeTab, setActiveTab] = useState("positive");
+    best: { [key: string]: { symbol: string; higherPct: number }[] };
+    worst: { [key: string]: { symbol: string; higherPct: number }[] };
+  }>({ best: {}, worst: {} });
+  const [activeTab, setActiveTab] = useState("best");
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    const symbolsArray = symbols
-      .replace(/\n/g, ",")
-      .split(",")
-      .map((s) => s.trim())
-      .filter((s) => s);
-    const allData: SeasonalityData = {};
+    const symbolsArray = cleanSymbolList(symbols);
+    const allData: SeasonalityResults = {};
 
     for (const symbol of symbolsArray) {
       const response = await fetch(
-        `/api/seasonality?ticker=${symbol}&type=monthly`
+        `/api/seasonality?ticker=${symbol}&timeframe=monthly`
       );
       const result = await response.json();
       allData[symbol] = result;
@@ -83,28 +94,30 @@ const MonthlySeasonality = () => {
     analyzeData(allData);
   };
 
-  const analyzeData = (allData: SeasonalityData) => {
-    const positive: { [key: string]: { symbol: string; higherPct: number }[] } =
-      {};
-    const negative: { [key: string]: { symbol: string; higherPct: number }[] } =
-      {};
+  const analyzeData = (allData: SeasonalityResults) => {
+    const best: {
+      [key: string]: { label: string; symbol: string; higherPct: number }[];
+    } = {};
+    const worst: {
+      [key: string]: { label: string; symbol: string; higherPct: number }[];
+    } = {};
 
-    Object.entries(allData).forEach(([symbol, { monthly }]) => {
-      Object.entries(monthly).forEach(([month, stats]) => {
-        if (stats.higherPct >= 0.75) {
-          positive[month] = positive[month]
-            ? [...positive[month], { symbol, higherPct: stats.higherPct }]
-            : [{ symbol, higherPct: stats.higherPct }];
-        }
-        if (stats.higherPct <= 0.2) {
-          negative[month] = negative[month]
-            ? [...negative[month], { symbol, higherPct: stats.higherPct }]
-            : [{ symbol, higherPct: stats.higherPct }];
-        }
+    Object.entries(allData).forEach(([symbol, timeframes]) => {
+      timeframes.forEach(({ timeframe, results }) => {
+        results.forEach(({ label, higherPct }) => {
+          if (higherPct >= THRESHOLD_UPPER) {
+            const result = { label, symbol, higherPct };
+            best[label] = best[label] ? [...best[label], result] : [result];
+          }
+          if (higherPct >= THRESHOLD_LOWER) {
+            const result = { label, symbol, higherPct };
+            worst[label] = worst[label] ? [...worst[label], result] : [result];
+          }
+        });
       });
     });
 
-    setResult({ positive, negative });
+    setResult({ best, worst });
   };
 
   const sortedEntries = (
@@ -119,181 +132,88 @@ const MonthlySeasonality = () => {
 
   return (
     <>
-      <nav className="bg-gray-800 p-4">
-        <Link className="text-white px-4" href="/">
-          Monthly and Weekly Seasonality
-        </Link>
-        <Link className="text-white px-4" href="/best-worst-months">
-          Best and Worst Months
-        </Link>
-        <Link className="text-white px-4" href="/best-worst-weeks">
-          Best and Worst Weeks
-        </Link>
-      </nav>
+      <GlobalNav links={links} />
+
       <main className="bg-black py-40 sm:py-24 mx-auto min-h-screen">
-        <div className="mx-auto max-w-2xl lg:text-center">
-          <h1 className="font-bold text-indigo-600">Best and Worst</h1>
-          <p className="mt-2 text-3xl font-bold tracking-tight text-white sm:text-4xl">
-            View the best and worst months for your stocks
-          </p>
-          <p className="mt-9 leading-7 text-white">
-            Symbols can be comma-separated or entered on a new line.
-          </p>
-        </div>
+        <BestWorstHeader view="months" />
 
         <div className="container xl mt-9 mx-auto p-12 bg-slate-700 rounded-xl shadow-lg text-white">
-          <form onSubmit={handleSubmit}>
-            <label className="block font-semibold" htmlFor="symbols">
-              Ticker Symbols
-            </label>
-            <textarea
-              className="block p-4 w-full mt-2 text-black"
-              id="symbols"
-              value={symbols}
-              onChange={(e) => setSymbols(e.target.value)}
-              required
-              rows={3}
-            />
-            <button
-              className="p-4 rounded mt-4 mb-4 w-36 bg-indigo-600 text-white"
-              type="submit"
-            >
-              Submit
-            </button>
-          </form>
-          {Object.keys(result.positive).length > 0 ||
-          Object.keys(result.negative).length > 0 ? (
+          <TickerSymbolForm
+            handleSubmit={handleSubmit}
+            onTextChange={(e) => setSymbols(e.target.value)}
+            symbols={symbols}
+          />
+          {Object.keys(result.best).length > 0 ||
+          Object.keys(result.worst).length > 0 ? (
             <div>
               <div className="flex justify-center mt-8">
-                {Object.keys(result.positive).length > 0 && (
-                  <button
-                    className={`p-4 rounded-l bg-indigo-600 text-white ${
-                      activeTab === "positive" ? "bg-indigo-800" : ""
-                    }`}
-                    onClick={() => setActiveTab("positive")}
-                  >
-                    Best Months
-                  </button>
-                )}
-                {Object.keys(result.negative).length > 0 && (
-                  <button
-                    className={`p-4 rounded-r bg-indigo-600 text-white ${
-                      activeTab === "negative" ? "bg-indigo-800" : ""
-                    }`}
-                    onClick={() => setActiveTab("negative")}
-                  >
-                    Worst Months
-                  </button>
-                )}
+                <ButtonTabs
+                  activeTab={activeTab}
+                  setActiveTab={setActiveTab}
+                  tabs={[
+                    {
+                      label: "Best Months",
+                      key: "best",
+                    },
+                    {
+                      label: "Worst Months",
+                      key: "worst",
+                    },
+                  ]}
+                />
               </div>
-              {activeTab === "positive" &&
-                Object.keys(result.positive).length > 0 && (
-                  <div>
-                    <h2 className="text-xl font-bold mt-8">
-                      Best Months (Positive Probability ≥ 75%)
-                    </h2>
-                    {sortedEntries(Object.entries(result.positive)).map(
-                      ([month, stocks]) => (
-                        <div
-                          key={month}
-                          className="not-prose relative bg-indigo-600 rounded-xl overflow-hidden mb-8"
-                        >
-                          <h4 className="text-white p-4 block font-semibold text-center">
-                            {getFullMonthName(month)}
-                          </h4>
-                          <div className="shadow-sm overflow-hidden">
-                            <div className="relative rounded-xl overflow-auto">
-                              <table className="table-auto border-collapse table-auto w-full text-sm mt-4">
-                                <thead>
-                                  <tr>
-                                    <th className="border-b bg-indigo-600 font-medium p-4 pl-8 pt-0 pb-3 text-white text-left">
-                                      Ticker
-                                    </th>
-                                    <th className="border-b bg-indigo-600 font-medium p-4 pl-8 pt-0 pb-3 text-white text-left">
-                                      Chance of Being Up
-                                    </th>
-                                    <th className="border-b bg-indigo-600 font-medium p-4 pl-8 pt-0 pb-3 text-white text-left">
-                                      Average Range
-                                    </th>
-                                  </tr>
-                                </thead>
-                                <tbody className="bg-white dark:bg-slate-800">
-                                  {stocks.map((stock) => (
-                                    <tr key={stock.symbol}>
-                                      <td className="uppercase border-b border-slate-100 dark:border-slate-700 p-4 pl-8 text-slate-500 dark:text-slate-400">
-                                        {stock.symbol}
-                                      </td>
-                                      <td className="border-b border-slate-100 dark:border-slate-700 p-4 pl-8 text-slate-500 dark:text-slate-400">
-                                        {(stock.higherPct * 100).toFixed(2)}%
-                                      </td>
-                                      <td className="border-b border-slate-100 dark:border-slate-700 p-4 pl-8 text-slate-500 dark:text-slate-400">
-                                        {stock.range || "n/a"}
-                                      </td>
-                                    </tr>
-                                  ))}
-                                </tbody>
-                              </table>
-                            </div>
-                          </div>
-                        </div>
-                      )
-                    )}
-                  </div>
-                )}
-              {activeTab === "negative" &&
-                Object.keys(result.negative).length > 0 && (
-                  <div>
-                    <h2 className="text-xl font-bold mt-8">
-                      Worst Months (Positive Probability ≤ 20%)
-                    </h2>
-                    {sortedEntries(Object.entries(result.negative)).map(
-                      ([month, stocks]) => (
-                        <div
-                          key={month}
-                          className="not-prose relative bg-indigo-600 rounded-xl overflow-hidden mb-8"
-                        >
-                          <h4 className="text-white p-4 block font-semibold text-center">
-                            {getFullMonthName(month)}
-                          </h4>
-                          <div className="shadow-sm overflow-hidden">
-                            <div className="relative rounded-xl overflow-auto">
-                              <table className="table-auto border-collapse table-auto w-full text-sm mt-4">
-                                <thead>
-                                  <tr>
-                                    <th className="border-b bg-indigo-600 font-medium p-4 pl-8 pt-0 pb-3 text-white text-left">
-                                      Ticker
-                                    </th>
-                                    <th className="border-b bg-indigo-600 font-medium p-4 pl-8 pt-0 pb-3 text-white text-left">
-                                      Chance of Being Up
-                                    </th>
-                                    <th className="border-b bg-indigo-600 font-medium p-4 pl-8 pt-0 pb-3 text-white text-left">
-                                      Average Range
-                                    </th>
-                                  </tr>
-                                </thead>
-                                <tbody className="bg-white dark:bg-slate-800">
-                                  {stocks.map((stock) => (
-                                    <tr key={stock.symbol}>
-                                      <td className="uppercase border-b border-slate-100 dark:border-slate-700 p-4 pl-8 text-slate-500 dark:text-slate-400">
-                                        {stock.symbol}
-                                      </td>
-                                      <td className="border-b border-slate-100 dark:border-slate-700 p-4 pl-8 text-slate-500 dark:text-slate-400">
-                                        {(stock.higherPct * 100).toFixed(2)}%
-                                      </td>
-                                      <td className="border-b border-slate-100 dark:border-slate-700 p-4 pl-8 text-slate-500 dark:text-slate-400">
-                                        {stock.range || "n/a"}
-                                      </td>
-                                    </tr>
-                                  ))}
-                                </tbody>
-                              </table>
-                            </div>
-                          </div>
-                        </div>
-                      )
-                    )}
-                  </div>
-                )}
+              {activeTab === "best" && (
+                <>
+                  {Object.keys(result.best).length > 0 ? (
+                    <>
+                      <h2 className="text-xl font-bold mt-8">
+                        Best Months (Positive Probability ≥ 75%)
+                      </h2>
+                      {sortedEntries(Object.entries(result.best)).map(
+                        ([month, stocks]) => (
+                          <TickerTable
+                            key={month}
+                            tableId={month}
+                            label={getFullMonthName(month)}
+                            data={stocks}
+                          />
+                        )
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      None of the symbols have positive probability higher than
+                      75%;
+                    </>
+                  )}
+                </>
+              )}
+              {activeTab === "worst" && (
+                <>
+                  {Object.keys(result.worst).length > 0 ? (
+                    <>
+                      <h2 className="text-xl font-bold mt-8">
+                        Worst Months (Positive Probability ≤ 20%)
+                      </h2>
+                      {sortedEntries(Object.entries(result.worst)).map(
+                        ([month, stocks]) => (
+                          <TickerTable
+                            key={month}
+                            tableId={month}
+                            label={getFullMonthName(month)}
+                            data={stocks}
+                          />
+                        )
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      None of the symbols have positive probability lower than
+                      20%;
+                    </>
+                  )}
+                </>
+              )}
             </div>
           ) : (
             <p className="text-white">No results to display.</p>

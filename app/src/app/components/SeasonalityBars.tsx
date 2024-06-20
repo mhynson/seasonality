@@ -59,6 +59,7 @@ export const SeasonalityBars = ({
       <SeasonalityBarRow view={view} label={label} stats={stats} />
 
       <AverageStats stats={stats} />
+
       <HistoricalStats stats={stats} />
     </div>
   ));

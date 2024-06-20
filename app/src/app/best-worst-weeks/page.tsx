@@ -1,8 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { getStartOfWeek } from "../api/seasonality/utils";
+import { LINKS as links, THRESHOLD_LOWER, THRESHOLD_UPPER } from "../constants";
+import { GlobalNav } from "../components/GlobalNav";
+import { TickerSymbolForm } from "../components/TickerSymbolForm";
 
 interface SeasonalityAverages {
   [key: string]: {
@@ -33,11 +35,7 @@ const WeeklySeasonality = () => {
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    const symbolsArray = symbols
-      .replace(/\n/g, ",")
-      .split(",")
-      .map((s) => s.trim())
-      .filter((s) => s);
+    const symbolsArray = cleanSymbolList(symbols);
     const allData: SeasonalityData = {};
 
     for (const symbol of symbolsArray) {
@@ -139,17 +137,8 @@ const WeeklySeasonality = () => {
 
   return (
     <>
-      <nav className="bg-gray-800 p-4">
-        <Link className="text-white px-4" href="/">
-          Monthly and Weekly Seasonality
-        </Link>
-        <Link className="text-white px-4" href="/best-worst-months">
-          Best and Worst Months
-        </Link>
-        <Link className="text-white px-4" href="/best-worst-weeks">
-          Best and Worst Weeks
-        </Link>
-      </nav>
+      <GlobalNav links={links} />
+
       <main className="bg-black py-40 sm:py-24 mx-auto min-h-screen">
         <div className="mx-auto max-w-2xl lg:text-center">
           <h1 className="font-bold text-indigo-600">Best and Worst</h1>
@@ -162,25 +151,11 @@ const WeeklySeasonality = () => {
         </div>
 
         <div className="container xl mt-9 mx-auto p-12 bg-slate-700 rounded-xl shadow-lg text-white">
-          <form onSubmit={handleSubmit}>
-            <label className="block font-semibold" htmlFor="symbols">
-              Ticker Symbols
-            </label>
-            <textarea
-              className="block p-4 w-full mt-2 text-black"
-              id="symbols"
-              value={symbols}
-              onChange={(e) => setSymbols(e.target.value)}
-              required
-              rows={3}
-            />
-            <button
-              className="p-4 rounded mt-4 mb-4 w-36 bg-indigo-600 text-white"
-              type="submit"
-            >
-              Submit
-            </button>
-          </form>
+          <TickerSymbolForm
+            handleSubmit={handleSubmit}
+            onTextChange={(e) => setSymbols(e.target.value)}
+            symbols={symbols}
+          />
 
           <div className="mt-8">
             <button
