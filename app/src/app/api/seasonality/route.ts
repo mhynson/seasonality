@@ -7,6 +7,7 @@ import { LOOKBACK_YEARS } from "@/app/constants";
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const ticker = searchParams.get("ticker");
+  const timeframeType = searchParams.get("timeframe");
 
   if (!ticker) {
     return NextResponse.json(
@@ -25,22 +26,33 @@ export async function GET(req: NextRequest) {
       period2: formatDate(endDate),
     };
 
-    const weeklyResult = await yahooFinance.historical(ticker, {
-      ...options,
-      interval: "1wk",
-    });
-    const monthlyResult = await yahooFinance.historical(ticker, {
-      ...options,
-      interval: "1mo",
-    });
+    const results = [];
 
-    const weeklySeasonality = calculateSeasonality("weekly", weeklyResult);
-    const monthlySeasonality = calculateSeasonality("monthly", monthlyResult);
+    if (timeframeType === "weekly" || !timeframeType) {
+      const timeframe = "weekly";
+      const weeklyResult = await yahooFinance.historical(ticker, {
+        ...options,
+        interval: "1wk",
+      });
+      results.push({
+        timeframe,
+        results: calculateSeasonality(timeframe, weeklyResult),
+      });
+    }
 
-    return NextResponse.json({
-      weekly: weeklySeasonality,
-      monthly: monthlySeasonality,
-    });
+    if (timeframeType === "monthly" || !timeframeType) {
+      const timeframe = "monthly";
+      const monthlyResult = await yahooFinance.historical(ticker, {
+        ...options,
+        interval: "1mo",
+      });
+      results.push({
+        timeframe,
+        results: calculateSeasonality(timeframe, monthlyResult),
+      });
+    }
+
+    return NextResponse.json(results);
   } catch (error) {
     return NextResponse.json(
       { error: "Failed to fetch stock data" },
