@@ -3,36 +3,26 @@
 import { useState } from "react";
 import {
   SeasonalityAverageEntry,
+  TSeasonalityData,
+  TSymbolGroupedData,
+  TSymbolSeasonalityData,
   cleanSymbolList,
 } from "./api/seasonality/utils";
-import Link from "next/link";
+import { LINKS as links } from "./constants";
 import { ErrorMessage } from "./components/ErrorMessage";
 import { SeasonalityBars } from "./components/SeasonalityBars";
-interface SeasonalityAverages {
-  [key: string]: SeasonalityAverageEntry;
-}
-
-interface SeasonalityData {
-  [key: string]: {
-    monthly: SeasonalityAverages;
-    weekly: SeasonalityAverages;
-  };
-}
-
-interface SymbolData {
-  view: "monthly" | "weekly";
-  data: SeasonalityAverages;
-}
+import { GlobalNav } from "./components/GlobalNav";
+import { TickerSymbolForm } from "./components/TickerSymbolForm";
 
 const Home = () => {
   const [symbols, setSymbols] = useState("");
-  const [data, setData] = useState<{ [symbol: string]: SymbolData }>({});
+  const [data, setData] = useState<TSymbolGroupedData>({});
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
 
     const symbolsArray = cleanSymbolList(symbols);
-    const allData: { [symbol: string]: SymbolData } = {};
+    const allData: TSymbolGroupedData = {};
 
     for (const symbol of symbolsArray) {
       const response = await fetch(`/api/seasonality?ticker=${symbol}`);
@@ -43,12 +33,19 @@ const Home = () => {
     setData(allData);
   };
 
-  const renderSymbolData = (symbol: string, symbolData: SymbolData) => {
+  const renderSymbolData = (
+    symbol: string,
+    symbolData: TSymbolSeasonalityData
+  ) => {
     const { view, data } = symbolData;
     const btnBaseClasses =
       "rounded px-4 py-2 ml-1 text-white  hover:bg-red-300 hover:opacity-100";
     const btnActiveClasses = "bg-red-400";
     const btnInactiveClasses = "bg-slate-300 opacity-70";
+
+    const dataForView = data.find(
+      ({ timeframe }: TSeasonalityData) => timeframe === view
+    );
 
     return (
       <div key={symbol} className="mt-8 border-t-2 py-4">
@@ -85,7 +82,7 @@ const Home = () => {
           {data?.error ? (
             <ErrorMessage error={data.error} />
           ) : (
-            <SeasonalityBars view={view} seasonalityData={data?.[view]} />
+            <SeasonalityBars seasonalityData={dataForView} />
           )}
         </div>
       </div>
@@ -94,20 +91,7 @@ const Home = () => {
 
   return (
     <>
-      <nav className="bg-gray-800 p-4">
-        <Link
-          className="text-white px-4 active:border-b-2 active:border-indigo-600"
-          href="/"
-        >
-          Monthly and Weekly Seasonality
-        </Link>
-        <Link className="text-white px-4" href="/best-worst-months">
-          Best and Worst Months
-        </Link>
-        <Link className="text-white px-4" href="/best-worst-weeks">
-          Best and Worst Weeks
-        </Link>
-      </nav>
+      <GlobalNav links={links} />
       <main className="bg-black py-40 sm:py-24 mx-auto min-h-screen">
         <div className="mx-auto max-w-2xl lg:text-center">
           <h1 className="font-bold text-indigo-600">Stock Seasonality</h1>
@@ -122,25 +106,12 @@ const Home = () => {
           </p>
         </div>
         <div className="container xl mt-9 mx-auto p-12 bg-slate-700 rounded-xl shadow-lg text-white">
-          <form onSubmit={handleSubmit}>
-            <label className="block font-semibold" htmlFor="symbols">
-              Ticker Symbols
-            </label>
-            <textarea
-              className="block p-4 w-full mt-2 text-black"
-              id="symbols"
-              value={symbols}
-              onChange={(e) => setSymbols(e.target.value)}
-              required
-              rows={3}
-            />
-            <button
-              className="p-4 rounded mt-4 mb-4 w-36 bg-indigo-600 text-white"
-              type="submit"
-            >
-              Submit
-            </button>
-          </form>
+          <TickerSymbolForm
+            handleSubmit={handleSubmit}
+            onTextChange={(e) => setSymbols(e.target.value)}
+            symbols={symbols}
+          />
+
           {Object.keys(data).length > 0 && (
             <div>
               {Object.entries(data).map(([symbol, symbolData]) =>

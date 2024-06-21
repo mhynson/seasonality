@@ -1,23 +1,10 @@
-import { SeasonalityAverageEntry } from "../api/seasonality/utils";
+import { TSeasonalityData } from "../api/seasonality/utils";
 import { AverageStats } from "./AverageStats";
 import { HistoricalStats } from "./HistoricalStats";
 import { SeasonalityBarRow } from "./SeasonalityBarRow";
 import { SectionHeading } from "./SectionHeading";
-
-interface SeasonalityData {
-  [key: string]: {
-    monthly: SeasonalityAverages;
-    weekly: SeasonalityAverages;
-  };
-}
-
-interface SeasonalityAverages {
-  [key: string]: SeasonalityAverageEntry;
-}
-
 interface ISeasonalityBarsProps {
-  seasonalityData: SeasonalityAverages;
-  view: "weekly" | "monthly";
+  seasonalityData: TSeasonalityData | undefined;
 }
 
 const monthOrder = [
@@ -35,15 +22,15 @@ const monthOrder = [
   "Dec",
 ];
 
-export const SeasonalityBars = ({
-  seasonalityData,
-  view,
-}: ISeasonalityBarsProps) => {
+export const SeasonalityBars = ({ seasonalityData }: ISeasonalityBarsProps) => {
   if (!seasonalityData) return <></>;
 
-  const sortedSeasonalityData = Object.entries(seasonalityData).sort((a, b) => {
-    const labelA = a[0];
-    const labelB = b[0];
+  const { timeframe, results } = seasonalityData;
+
+  // TODO: sort this in the api
+  const sortedSeasonalityData = results.sort((a, b) => {
+    const { label: labelA = "" } = a;
+    const { label: labelB = "" } = b;
     if (monthOrder.indexOf(labelA) < 0) {
       if (!isNaN(parseFloat(labelA)))
         return parseFloat(labelB) - parseFloat(labelB);
@@ -52,15 +39,17 @@ export const SeasonalityBars = ({
     return monthOrder.indexOf(labelA) - monthOrder.indexOf(labelB);
   });
 
-  return sortedSeasonalityData.map(([label, stats]) => (
-    <div key={label} className="mb-8 border-b-2 pb-4">
-      <SectionHeading view={view} label={label} />
+  console.log({ timeframe, sortedSeasonalityData });
 
-      <SeasonalityBarRow view={view} label={label} stats={stats} />
+  return sortedSeasonalityData.map((result) => (
+    <div key={result.label} className="mb-8 border-b-2 pb-4">
+      <SectionHeading view={timeframe} label={result.label} />
 
-      <AverageStats stats={stats} />
+      <SeasonalityBarRow view={timeframe} label={result.label} stats={result} />
 
-      <HistoricalStats stats={stats} />
+      <AverageStats stats={result} />
+
+      <HistoricalStats stats={result} />
     </div>
   ));
 };

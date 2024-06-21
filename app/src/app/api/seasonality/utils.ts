@@ -10,8 +10,23 @@ interface HistoricalRowHistory {
   volume: number;
 }
 
+export type TSeasonalityData = {
+  error?: any;
+  timeframe: "weekly" | "monthly";
+  results: SeasonalityAverageEntry[];
+};
+
+export type TSymbolSeasonalityData = {
+  view: "monthly" | "weekly";
+  data: TSeasonalityData[];
+};
+
+export type TSymbolGroupedData = {
+  [symbol: string]: TSymbolSeasonalityData;
+};
+
 export interface SeasonalityAverageEntry {
-  label?: string;
+  label: string;
   averageChange: number;
   averageRange: number;
   changes: PercentChangeDataForPeriod[];
@@ -19,10 +34,6 @@ export interface SeasonalityAverageEntry {
   higherCloses: number;
   count: number;
   higherPct: number;
-}
-
-interface SeasonalityAverages {
-  [key: string]: SeasonalityAverageEntry;
 }
 
 interface PercentChangeDataForPeriod {
@@ -33,14 +44,14 @@ interface PercentChangeDataForPeriod {
   change: number;
 }
 
-interface SeasonalityEntry {
+export type TSeasonalityEntry = {
   up: boolean;
   change: number;
   open: number;
   close: number;
   range: number;
   date: string;
-}
+};
 
 type Month =
   | "Jan"
@@ -56,8 +67,8 @@ type Month =
   | "Nov"
   | "Dec";
 
-type SeasonalityData = {
-  [key in Month | string]: SeasonalityEntry[];
+export type TGroupedSeasonalityData = {
+  [key in Month | string]: TSeasonalityEntry[];
 };
 
 export const formatDate = (date: Date): string => {
@@ -115,10 +126,10 @@ export const calculateSeasonality = (
       range: Math.abs(high - low),
       change: (close - open) / open,
     }))
-    .reduce<SeasonalityData>((acc, data) => {
+    .reduce<TGroupedSeasonalityData>((acc, data) => {
       const { label, change, range, date, open, close } = data;
 
-      const entry: SeasonalityEntry = {
+      const entry: TSeasonalityEntry = {
         up: change * 100 >= 0,
         change,
         open,
