@@ -1,84 +1,11 @@
 import { monthNames } from "@/app/constants";
-
-interface HistoricalRowHistory {
-  date: Date;
-  open: number;
-  high: number;
-  low: number;
-  close: number;
-  adjClose?: number;
-  volume: number;
-}
-
-export type TSeasonalityData = {
-  timeframe: "weekly" | "monthly";
-  results: TSeasonalityAverageEntry[];
-  error?: string;
-};
-
-export type TSymbolSeasonalityDataView = {
-  view: "monthly" | "weekly";
-  data: TSeasonalityData[];
-};
-
-export type TSymbolGroupedData = {
-  [symbol: string]: TSymbolSeasonalityDataView;
-};
-
-export type TSymbolGroupedTimeframeSeasonality = {
-  [symbol: string]: TSeasonalityData[];
-};
-
-export type TSeasonalityAverageEntry = {
-  label: string;
-  averageChange: number;
-  averageRange: number;
-  changes: TSeasonalityEntry[];
-  lowerCloses: number;
-  higherCloses: number;
-  count: number;
-  higherPct: number;
-};
-
-export interface TSeasonalityAverageEntryWithSymbol
-  extends TSeasonalityAverageEntry {
-  symbol?: string;
-}
-
-interface PercentChangeDataForPeriod {
-  date: string;
-  label: Month;
-  close: number;
-  open: number;
-  change: number;
-}
-
-export type TSeasonalityEntry = {
-  up: boolean;
-  change: number;
-  open: number;
-  close: number;
-  range: number;
-  date: string;
-};
-
-type Month =
-  | "Jan"
-  | "Feb"
-  | "Mar"
-  | "Apr"
-  | "May"
-  | "Jun"
-  | "Jul"
-  | "Aug"
-  | "Sep"
-  | "Oct"
-  | "Nov"
-  | "Dec";
-
-export type TGroupedSeasonalityData = {
-  [key in Month | string]: TSeasonalityEntry[];
-};
+import {
+  TCalculateSeasonality,
+  TGroupedSeasonalityData,
+  TReduceGroupedPeriods,
+  TSeasonalityData,
+  TSeasonalityEntry,
+} from "@/app/types";
 
 export const formatDate = (date: Date): string => {
   const year = date.getUTCFullYear();
@@ -121,10 +48,6 @@ export const getStartOfWeek = (weekNumber: number | string) => {
 };
 
 export const sumReduction = (total: number, current: number) => total + current;
-export type TCalculateSeasonality = (
-  timeframe: "monthly" | "weekly",
-  data: HistoricalRowHistory[]
-) => TSeasonalityAverageEntry[];
 
 export const calculateSeasonality: TCalculateSeasonality = (
   timeframe,
@@ -164,11 +87,6 @@ export const calculateSeasonality: TCalculateSeasonality = (
 
   return seasonalityAverages;
 };
-
-type TReduceGroupedPeriods = (
-  acc: TSeasonalityAverageEntry[],
-  [label, periods]: [string, TSeasonalityEntry[]]
-) => TSeasonalityAverageEntry[];
 
 const reduceGroupedPeriods: TReduceGroupedPeriods = (acc, [label, periods]) => {
   const changes = periods.map(({ change }) => change);
