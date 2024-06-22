@@ -1,19 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import {
-  TSeasonalityAverageEntry,
-  TSeasonalityData,
-  TSymbolGroupedData,
-  TSymbolSeasonalityDataView,
-  cleanSymbolList,
-  getError,
-} from "./api/seasonality/utils";
+import { cleanSymbolList, getError } from "./api/seasonality/utils";
 import { LINKS as links } from "./constants";
 import { ErrorMessage } from "./components/ErrorMessage";
 import { SeasonalityBars } from "./components/SeasonalityBars";
 import { GlobalNav } from "./components/GlobalNav";
 import { TickerSymbolForm } from "./components/TickerSymbolForm";
+import {
+  TSeasonalityData,
+  TSymbolGroupedData,
+  TSymbolSeasonalityDataView,
+} from "./types";
 
 const Home = () => {
   const [symbols, setSymbols] = useState("");

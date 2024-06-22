@@ -1,4 +1,8 @@
-export const BestWorstHeader = ({ timeframe }: { timeframe: string }) => {
+import { TTimeframeLabel } from "../types";
+interface IBestWorstWorstHeaderProps {
+  timeframe: TTimeframeLabel;
+}
+export const BestWorstHeader = ({ timeframe }: IBestWorstWorstHeaderProps) => {
   return (
     <div className="mx-auto max-w-2xl lg:text-center">
       <h1 className="font-bold text-indigo-600">Best and Worst</h1>

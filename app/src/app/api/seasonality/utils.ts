@@ -5,6 +5,7 @@ import {
   TReduceGroupedPeriods,
   TSeasonalityData,
   TSeasonalityEntry,
+  TTimeframeLabel,
 } from "@/app/types";
 
 export const formatDate = (date: Date): string => {
@@ -24,7 +25,7 @@ export const getWeekNumber = (date: Date): number => {
 };
 
 export const getPeriodLabelFromDate = (
-  timeframe: "monthly" | "weekly",
+  timeframe: TTimeframeLabel,
   date: Date
 ): string => {
   if (timeframe === "weekly") return getWeekNumber(date).toString();

@@ -15,9 +15,9 @@ import { TickerTable } from "./TickerTable";
 import {
   cleanSymbolList,
   getLabelForTimeframe,
-  TSeasonalityAverageEntryWithSymbol,
-  TSymbolGroupedTimeframeSeasonality,
 } from "../api/seasonality/utils";
+import { TSymbolGroupedTimeframeSeasonality, TTimeframeLabel } from "../types";
+import { TSeasonalityAverageEntryWithSymbol } from "../interfaces";
 
 type TGroupedSeasonalityAverages = {
   [key: string]: TSeasonalityAverageEntryWithSymbol[];
@@ -28,7 +28,7 @@ type TSeasonalitySorter = (
   b: TSeasonalityAverageEntryWithSymbol[]
 ) => number;
 interface IBestWorstPageProps {
-  timeframe: "weekly" | "monthly";
+  timeframe: TTimeframeLabel;
 }
 
 export const BestWorstPage = ({ timeframe }: IBestWorstPageProps) => {

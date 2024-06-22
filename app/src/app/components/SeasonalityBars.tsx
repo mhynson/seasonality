@@ -1,4 +1,4 @@
-import { TSeasonalityData } from "../api/seasonality/utils";
+import { TSeasonalityData } from "../types";
 import { AverageStats } from "./AverageStats";
 import { HistoricalStats } from "./HistoricalStats";
 import { SeasonalityBarRow } from "./SeasonalityBarRow";

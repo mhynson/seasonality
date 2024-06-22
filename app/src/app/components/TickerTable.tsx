@@ -1,4 +1,4 @@
-import { TSeasonalityAverageEntryWithSymbol } from "../api/seasonality/utils";
+import { TSeasonalityAverageEntryWithSymbol } from "../interfaces";
 
 interface ITickerTableProps {
   tableId?: string;

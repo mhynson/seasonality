@@ -1,4 +1,4 @@
-import { TSeasonalityAverageEntry } from "../api/seasonality/utils";
+import { TSeasonalityAverageEntry } from "../types";
 
 export const AverageStats = ({
   stats,

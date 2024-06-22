@@ -1,23 +1,25 @@
 import { HistoricalRowHistory } from "./interfaces";
 
+export type TTimeframeLabel = "weekly" | "monthly";
+
 export type TReduceGroupedPeriods = (
   acc: TSeasonalityAverageEntry[],
   [label, periods]: [string, TSeasonalityEntry[]]
 ) => TSeasonalityAverageEntry[];
 
 export type TCalculateSeasonality = (
-  timeframe: "monthly" | "weekly",
+  timeframe: TTimeframeLabel,
   data: HistoricalRowHistory[]
 ) => TSeasonalityAverageEntry[];
 
 export type TSeasonalityData = {
-  timeframe: "weekly" | "monthly";
+  timeframe: TTimeframeLabel;
   results: TSeasonalityAverageEntry[];
   error?: string;
 };
 
 export type TSymbolSeasonalityDataView = {
-  view: "monthly" | "weekly";
+  view: TTimeframeLabel;
   data: TSeasonalityData[];
 };
 

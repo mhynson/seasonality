@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { TSeasonalityAverageEntry, formatDate } from "../api/seasonality/utils";
+import { formatDate } from "../api/seasonality/utils";
+import { TSeasonalityAverageEntry } from "../types";
 
 interface IHistoricalStatsProps {
   stats: TSeasonalityAverageEntry;
