@@ -13,27 +13,36 @@ interface HistoricalRowHistory {
 export type TSeasonalityData = {
   error?: any;
   timeframe: "weekly" | "monthly";
-  results: SeasonalityAverageEntry[];
+  results: TSeasonalityAverageEntry[];
 };
 
-export type TSymbolSeasonalityData = {
+export type TSymbolSeasonalityDataView = {
   view: "monthly" | "weekly";
   data: TSeasonalityData[];
 };
 
 export type TSymbolGroupedData = {
-  [symbol: string]: TSymbolSeasonalityData;
+  [symbol: string]: TSymbolSeasonalityDataView;
 };
 
-export interface SeasonalityAverageEntry {
+export type TSymbolGroupedTimeframeSeasonality = {
+  [symbol: string]: TSeasonalityData[];
+};
+
+export type TSeasonalityAverageEntry = {
   label: string;
   averageChange: number;
   averageRange: number;
-  changes: PercentChangeDataForPeriod[];
+  changes: TSeasonalityEntry[];
   lowerCloses: number;
   higherCloses: number;
   count: number;
   higherPct: number;
+};
+
+export interface TSeasonalityAverageEntryWithSymbol
+  extends TSeasonalityAverageEntry {
+  symbol?: string;
 }
 
 interface PercentChangeDataForPeriod {
@@ -111,12 +120,16 @@ export const getStartOfWeek = (weekNumber: number | string) => {
   return formatDate(new Date(currentYear, 0, 1 + week * 7 - offset + 1));
 };
 
-export const sum = (total: number, current: number) => total + current;
-
-export const calculateSeasonality = (
+export const sumReduction = (total: number, current: number) => total + current;
+export type TCalculateSeasonality = (
   timeframe: "monthly" | "weekly",
   data: HistoricalRowHistory[]
-): SeasonalityAverageEntry[] => {
+) => TSeasonalityAverageEntry[];
+
+export const calculateSeasonality: TCalculateSeasonality = (
+  timeframe,
+  data
+) => {
   const groupedPeriods = data
     .map(({ open, high, low, close, date }) => ({
       label: getPeriodLabelFromDate(timeframe, new Date(date)),
@@ -144,35 +157,41 @@ export const calculateSeasonality = (
       };
     }, {});
 
-  // Calculate seasonality averages
   const seasonalityAverages = Object.entries(groupedPeriods).reduce(
-    (acc, [label, periods]) => {
-      const changes = periods!.map(({ change }) => change);
-      const averageChange = changes.reduce(sum, 0) / periods!.length;
-      const higherCloses = periods!.filter(({ up }) => up).length;
-      const lowerCloses = periods!.filter(({ up }) => !up).length;
-      const higherPct = higherCloses / periods!.length;
-      const averageRange =
-        periods!.map(({ range }) => range).reduce(sum, 0) / periods!.length;
-
-      return [
-        ...acc,
-        {
-          label,
-          averageChange,
-          averageRange,
-          lowerCloses,
-          higherCloses,
-          count: periods!.length,
-          higherPct,
-          changes: periods,
-        },
-      ];
-    },
+    reduceGroupedPeriods,
     []
   );
 
   return seasonalityAverages;
+};
+
+type TReduceGroupedPeriods = (
+  acc: TSeasonalityAverageEntry[],
+  [label, periods]: [string, TSeasonalityEntry[]]
+) => TSeasonalityAverageEntry[];
+
+const reduceGroupedPeriods: TReduceGroupedPeriods = (acc, [label, periods]) => {
+  const changes = periods.map(({ change }) => change);
+  const averageChange = changes.reduce(sumReduction, 0) / periods.length;
+  const higherCloses = periods.filter(({ up }) => up).length;
+  const lowerCloses = periods.filter(({ up }) => !up).length;
+  const higherPct = higherCloses / periods.length;
+  const averageRange =
+    periods.map(({ range }) => range).reduce(sumReduction, 0) / periods.length;
+
+  return [
+    ...acc,
+    {
+      label,
+      averageChange,
+      averageRange,
+      lowerCloses,
+      higherCloses,
+      count: periods.length,
+      higherPct,
+      changes: periods,
+    },
+  ];
 };
 
 export const cleanSymbolList = (symbols: string): string[] =>

@@ -2,10 +2,10 @@
 
 import { useState } from "react";
 import {
-  SeasonalityAverageEntry,
+  TSeasonalityAverageEntry,
   TSeasonalityData,
   TSymbolGroupedData,
-  TSymbolSeasonalityData,
+  TSymbolSeasonalityDataView,
   cleanSymbolList,
 } from "./api/seasonality/utils";
 import { LINKS as links } from "./constants";
@@ -35,7 +35,7 @@ const Home = () => {
 
   const renderSymbolData = (
     symbol: string,
-    symbolData: TSymbolSeasonalityData
+    symbolData: TSymbolSeasonalityDataView
   ) => {
     const { view, data } = symbolData;
     const btnBaseClasses =

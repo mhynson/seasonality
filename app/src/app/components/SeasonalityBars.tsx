@@ -27,7 +27,6 @@ export const SeasonalityBars = ({ seasonalityData }: ISeasonalityBarsProps) => {
 
   const { timeframe, results } = seasonalityData;
 
-  // TODO: sort this in the api
   const sortedSeasonalityData = results.sort((a, b) => {
     const { label: labelA = "" } = a;
     const { label: labelB = "" } = b;
@@ -38,8 +37,6 @@ export const SeasonalityBars = ({ seasonalityData }: ISeasonalityBarsProps) => {
     }
     return monthOrder.indexOf(labelA) - monthOrder.indexOf(labelB);
   });
-
-  console.log({ timeframe, sortedSeasonalityData });
 
   return sortedSeasonalityData.map((result) => (
     <div key={result.label} className="mb-8 border-b-2 pb-4">

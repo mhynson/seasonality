@@ -1,9 +1,9 @@
-import { SeasonalityAverageEntry } from "../api/seasonality/utils";
+import { TSeasonalityAverageEntry } from "../api/seasonality/utils";
 
 interface ISeasonalityBarRowProps {
   view: string;
   label: string;
-  stats: SeasonalityAverageEntry;
+  stats: TSeasonalityAverageEntry;
 }
 
 export const SeasonalityBarRow = (props: ISeasonalityBarRowProps) => {

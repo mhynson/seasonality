@@ -15,52 +15,36 @@ import { TickerTable } from "./TickerTable";
 import {
   cleanSymbolList,
   getLabelForTimeframe,
+  TSeasonalityAverageEntryWithSymbol,
+  TSymbolGroupedTimeframeSeasonality,
 } from "../api/seasonality/utils";
 
-interface ChangeData {
-  up: boolean;
-  change: number;
-  open: number;
-  close: number;
-  range: number;
-  date: string;
-}
-interface SeasonalityAverages {
-  label: string;
-  averageChange: number;
-  averageRange: number;
-  lowerCloses: number;
-  higherCloses: number;
-  count: number;
-  higherPct: number;
-  changes: ChangeData;
-}
+type TGroupedSeasonalityAverages = {
+  [key: string]: TSeasonalityAverageEntryWithSymbol[];
+};
 
-interface SeasonalityResults {
-  [key: string]: SeasonalityData[];
-}
-interface SeasonalityData {
-  timeframe: "weekly" | "monthly";
-  results: SeasonalityAverages[];
-}
-
+type TSeasonalitySorter = (
+  a: TSeasonalityAverageEntryWithSymbol[],
+  b: TSeasonalityAverageEntryWithSymbol[]
+) => number;
 interface IBestWorstPageProps {
   timeframe: "weekly" | "monthly";
 }
+
 export const BestWorstPage = ({ timeframe }: IBestWorstPageProps) => {
   const pluralizedTimeframe = timeframe.replace("ly", "s");
   const [symbols, setSymbols] = useState("");
-  const [data, setData] = useState<SeasonalityResults>([]);
+  const [data, setData] = useState<TSymbolGroupedTimeframeSeasonality>({});
   const [result, setResult] = useState<{
-    best: { [key: string]: { symbol: string; higherPct: number }[] };
-    worst: { [key: string]: { symbol: string; higherPct: number }[] };
-  }>({ best: {}, worst: {} });
+    best: TSeasonalityAverageEntryWithSymbol[][];
+    worst: TSeasonalityAverageEntryWithSymbol[][];
+  }>({ best: [], worst: [] });
   const [activeTab, setActiveTab] = useState("best");
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     const symbolsArray = cleanSymbolList(symbols);
-    const allData: SeasonalityResults = {};
+    const allData: TSymbolGroupedTimeframeSeasonality = {};
 
     for (const symbol of symbolsArray) {
       const response = await fetch(
@@ -74,41 +58,49 @@ export const BestWorstPage = ({ timeframe }: IBestWorstPageProps) => {
     analyzeData(allData);
   };
 
-  const analyzeData = (allData: SeasonalityResults) => {
-    const best: {
-      [key: string]: { label: string; symbol: string; higherPct: number }[];
-    } = {};
-    const worst: {
-      [key: string]: { label: string; symbol: string; higherPct: number }[];
-    } = {};
+  const sortByDateAscending: TSeasonalitySorter = (
+    [{ label: labelA }],
+    [{ label: labelB }]
+  ) => monthOrder.indexOf(labelA) - monthOrder.indexOf(labelB);
+
+  const sortByPercentDescending: TSeasonalitySorter = (
+    [{ higherPct: pctA }],
+    [{ higherPct: pctB }]
+  ) => pctB - pctA;
+
+  const analyzeData = (allData: TSymbolGroupedTimeframeSeasonality) => {
+    const best: TGroupedSeasonalityAverages = {};
+    const worst: TGroupedSeasonalityAverages = {};
 
     Object.entries(allData).forEach(([symbol, timeframes]) => {
       timeframes.forEach(({ results }) => {
-        results.forEach(({ label, higherPct }) => {
+        results.forEach((result) => {
+          const { label, higherPct } = result;
+          const resultWithSymbol = { ...result, symbol };
+
           if (higherPct >= THRESHOLD_UPPER) {
-            const result = { label, symbol, higherPct };
-            best[label] = best[label] ? [...best[label], result] : [result];
+            best[label] = best[label]
+              ? [...best[label], resultWithSymbol]
+              : [resultWithSymbol];
           }
           if (higherPct <= THRESHOLD_LOWER) {
-            const result = { label, symbol, higherPct };
-            worst[label] = worst[label] ? [...worst[label], result] : [result];
+            worst[label] = worst[label]
+              ? [...worst[label], resultWithSymbol]
+              : [resultWithSymbol];
           }
         });
       });
     });
 
-    setResult({ best, worst });
-  };
+    const sortedBest = Object.values(best)
+      .sort(sortByDateAscending)
+      .sort(sortByPercentDescending);
+    const sortedWorst = Object.values(worst)
+      .sort(sortByDateAscending)
+      .sort(sortByPercentDescending);
 
-  const sortedEntries = (
-    entries: [string, { symbol: string; higherPct: number }[]][]
-  ) =>
-    entries
-      .sort(([a], [b]) => monthOrder.indexOf(a) - monthOrder.indexOf(b))
-      .map(([label, stocks]) => [
-        label,
-        stocks.sort((a, b) => b.higherPct - a.higherPct),
-      ]);
+    setResult({ best: sortedBest, worst: sortedWorst });
+  };
 
   return (
     <>
@@ -150,16 +142,17 @@ export const BestWorstPage = ({ timeframe }: IBestWorstPageProps) => {
                         Best {pluralizedTimeframe}
                       </h2>
                       <h4 className="text-sm">(Positive Probability ≥ 75%)</h4>
-                      {sortedEntries(Object.entries(result.best)).map(
-                        ([month, stocks]) => (
+                      {result.best.map((data) => {
+                        const label = data[0].label;
+                        return (
                           <TickerTable
-                            key={month}
-                            tableId={month}
-                            label={getLabelForTimeframe(month, timeframe)}
-                            data={stocks}
+                            key={label}
+                            tableId={label}
+                            label={getLabelForTimeframe(label, timeframe)}
+                            data={data}
                           />
-                        )
-                      )}
+                        );
+                      })}
                     </>
                   ) : (
                     <>
@@ -179,16 +172,17 @@ export const BestWorstPage = ({ timeframe }: IBestWorstPageProps) => {
                       <h4 className="text-sm">
                         (Positive Probability ≥ ≤ 20%)
                       </h4>
-                      {sortedEntries(Object.entries(result.worst)).map(
-                        ([month, stocks]) => (
+                      {result.worst.map((data) => {
+                        const label = data[0].label;
+                        return (
                           <TickerTable
-                            key={month}
-                            tableId={month}
-                            label={getLabelForTimeframe(month, timeframe)}
-                            data={stocks}
+                            key={label}
+                            tableId={label}
+                            label={getLabelForTimeframe(label, timeframe)}
+                            data={data}
                           />
-                        )
-                      )}
+                        );
+                      })}
                     </>
                   ) : (
                     <>
