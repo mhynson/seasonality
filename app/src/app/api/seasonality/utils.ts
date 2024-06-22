@@ -11,9 +11,9 @@ interface HistoricalRowHistory {
 }
 
 export type TSeasonalityData = {
-  error?: any;
   timeframe: "weekly" | "monthly";
   results: TSeasonalityAverageEntry[];
+  error?: string;
 };
 
 export type TSymbolSeasonalityDataView = {
@@ -213,3 +213,5 @@ export const getLabelForTimeframe = (
     ? `Week ${initialLabel} / ${getStartOfWeek(initialLabel)}`
     : initialLabel;
 };
+
+export const getError = (data: TSeasonalityData[]) => data?.[0]?.error || null;

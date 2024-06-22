@@ -10,10 +10,9 @@ export async function GET(req: NextRequest) {
   const timeframeType = searchParams.get("timeframe");
 
   if (!ticker) {
-    return NextResponse.json(
-      { error: "Must enter a ticker!" },
-      { status: 400 }
-    );
+    return NextResponse.json([{ error: "Must enter a ticker!" }], {
+      status: 400,
+    });
   }
 
   const endDate = new Date();
@@ -55,8 +54,10 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(results);
   } catch (error) {
     return NextResponse.json(
-      { error: "Failed to fetch stock data" },
-      { status: 500 }
+      [{ error: `No stock data for ticker: "${ticker}".` }],
+      {
+        status: 500,
+      }
     );
   }
 }

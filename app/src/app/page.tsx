@@ -7,6 +7,7 @@ import {
   TSymbolGroupedData,
   TSymbolSeasonalityDataView,
   cleanSymbolList,
+  getError,
 } from "./api/seasonality/utils";
 import { LINKS as links } from "./constants";
 import { ErrorMessage } from "./components/ErrorMessage";
@@ -38,6 +39,8 @@ const Home = () => {
     symbolData: TSymbolSeasonalityDataView
   ) => {
     const { view, data } = symbolData;
+    const error = getError(data);
+
     const btnBaseClasses =
       "rounded px-4 py-2 ml-1 text-white  hover:bg-red-300 hover:opacity-100";
     const btnActiveClasses = "bg-red-400";
@@ -50,41 +53,48 @@ const Home = () => {
     return (
       <div key={symbol} className="mt-8 border-t-2 py-4">
         <h2 className="text-xl font-bold">{symbol.toUpperCase()}</h2>
-        <div className="flex justify-center mt-4">
-          <button
-            className={`${btnBaseClasses} ${
-              view === "monthly" ? btnActiveClasses : btnInactiveClasses
-            }`}
-            onClick={() =>
-              setData((prevData) => ({
-                ...prevData,
-                [symbol]: { ...prevData[symbol], view: "monthly" },
-              }))
-            }
-          >
-            Monthly View
-          </button>
-          <button
-            className={`${btnBaseClasses} ${
-              view === "weekly" ? btnActiveClasses : btnInactiveClasses
-            }`}
-            onClick={() =>
-              setData((prevData) => ({
-                ...prevData,
-                [symbol]: { ...prevData[symbol], view: "weekly" },
-              }))
-            }
-          >
-            Weekly View
-          </button>
-        </div>
-        <div className="bg-white p-4 rounded mt-4">
-          {data?.error ? (
-            <ErrorMessage error={data.error} />
-          ) : (
-            <SeasonalityBars seasonalityData={dataForView} />
-          )}
-        </div>
+
+        {error ? (
+          <div className="my-4 p-4 bg-slate-50">
+            <pre>
+              <ErrorMessage error={error} />
+            </pre>
+          </div>
+        ) : (
+          <>
+            <div className="flex justify-center mt-4">
+              <button
+                className={`${btnBaseClasses} ${
+                  view === "monthly" ? btnActiveClasses : btnInactiveClasses
+                }`}
+                onClick={() =>
+                  setData((prevData) => ({
+                    ...prevData,
+                    [symbol]: { ...prevData[symbol], view: "monthly" },
+                  }))
+                }
+              >
+                Monthly View
+              </button>
+              <button
+                className={`${btnBaseClasses} ${
+                  view === "weekly" ? btnActiveClasses : btnInactiveClasses
+                }`}
+                onClick={() =>
+                  setData((prevData) => ({
+                    ...prevData,
+                    [symbol]: { ...prevData[symbol], view: "weekly" },
+                  }))
+                }
+              >
+                Weekly View
+              </button>
+            </div>
+            <div className="bg-white p-4 rounded mt-4">
+              <SeasonalityBars seasonalityData={dataForView} />
+            </div>
+          </>
+        )}
       </div>
     );
   };
