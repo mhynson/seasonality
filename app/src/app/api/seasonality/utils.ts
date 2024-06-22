@@ -1,4 +1,4 @@
-import { monthNames } from "@/app/constants";
+import { LOOKBACK_YEARS, monthNames } from "@/app/constants";
 import {
   TCalculateSeasonality,
   TGroupedSeasonalityData,
@@ -90,13 +90,16 @@ export const calculateSeasonality: TCalculateSeasonality = (
 };
 
 const reduceGroupedPeriods: TReduceGroupedPeriods = (acc, [label, periods]) => {
-  const changes = periods.map(({ change }) => change);
-  const averageChange = changes.reduce(sumReduction, 0) / periods.length;
-  const higherCloses = periods.filter(({ up }) => up).length;
-  const lowerCloses = periods.filter(({ up }) => !up).length;
-  const higherPct = higherCloses / periods.length;
+  const validPeriods = periods.slice(0, LOOKBACK_YEARS);
+  const changes = validPeriods.map(({ change }) => change);
+  console.log(label, changes.length, { changes });
+  const averageChange = changes.reduce(sumReduction, 0) / validPeriods.length;
+  const higherCloses = validPeriods.filter(({ up }) => up).length;
+  const lowerCloses = validPeriods.filter(({ up }) => !up).length;
+  const higherPct = higherCloses / validPeriods.length;
   const averageRange =
-    periods.map(({ range }) => range).reduce(sumReduction, 0) / periods.length;
+    validPeriods.map(({ range }) => range).reduce(sumReduction, 0) /
+    validPeriods.length;
 
   return [
     ...acc,
@@ -106,9 +109,9 @@ const reduceGroupedPeriods: TReduceGroupedPeriods = (acc, [label, periods]) => {
       averageRange,
       lowerCloses,
       higherCloses,
-      count: periods.length,
+      count: validPeriods.length,
       higherPct,
-      changes: periods,
+      changes: validPeriods,
     },
   ];
 };
