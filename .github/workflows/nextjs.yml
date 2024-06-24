@@ -81,7 +81,6 @@ jobs:
         run: |
           cd app
           ${{ steps.detect-package-manager.outputs.runner }} next build
-        cache-dependency-path: "./app/yarn.lock"
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
