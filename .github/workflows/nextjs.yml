@@ -80,7 +80,7 @@ jobs:
       - name: Build with Next.js
         run: |
           cd app
-          ${{ steps.detect-package-manager.outputs.runner }} next build
+          ${{ steps.detect-package-manager.outputs.runner }} build
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
