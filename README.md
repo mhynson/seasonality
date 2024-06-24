@@ -1,18 +1,14 @@
-Sure! Here's the updated README to reflect that we're using Next.js with the App Router.
-
----
-
 # Stock Seasonality App
 
 ## Overview
 
-The Stock Seasonality App allows users to enter a ticker symbol for any stock and view the stock's monthly and weekly seasonality. The app uses the past 5 years of data by default but allows the user to configure a different amount of time (e.g., 2 years, 20 years, 10 years, etc.). The monthly seasonality displays each of the 12 months, the average percent change for the month, and the probability that the stock price will go up for each month. The weekly seasonality displays data for each of the 52 weeks in a year and includes the average percent change and the probability that the stock price will go up for each week.
+The Stock Seasonality App allows users to enter a ticker symbol for any stock and view the stock's monthly and weekly seasonality. The app uses the past 5 years of data by default but will eventually allow the user to configure a different amount of time (e.g., 2 years, 20 years, 10 years, etc.). The monthly seasonality displays each of the 12 months, the average percent change for the month, and the probability that the stock price will go up for each month. The weekly seasonality displays data for each of the 52 weeks in a year and includes the average percent change and the probability that the stock price will go up for each week.
 
 ## Objectives
 
-- Allow users to input a stock ticker symbol.
-- Display the stock's monthly seasonality data.
-- Display the stock's weekly seasonality data.
+- Allow users to input a list of stock ticker symbols.
+- Display the stocks' monthly and weekly seasonality data.
+- Display the best and worst months and weeks for stocks.
 - Allow users to configure the time range for the data analysis.
 
 ## Project Setup
@@ -27,8 +23,8 @@ The Stock Seasonality App allows users to enter a ticker symbol for any stock an
 1. **Clone the repository:**
 
    ```bash
-   git clone https://github.com/your-username/stock-seasonality-app.git
-   cd stock-seasonality-app
+   git clone https://github.com/mhynson/seasonality.git
+   cd seasonality
    ```
 
 2. **Install dependencies:**
@@ -50,23 +46,35 @@ The Stock Seasonality App allows users to enter a ticker symbol for any stock an
 ## Project Structure
 
 ```
-stock-seasonality-app
-│
+.
+├── README.md
+├── TODO.md
 ├── app
-│   ├── api
-│   │   └── seasonality
-│   │       └── route.ts
-│   └── page.tsx
-│
-├── node_modules
-├── public
-├── styles
-├── .gitignore
-├── next-env.d.ts
-├── next.config.js
-├── package.json
-├── tsconfig.json
-└── yarn.lock
+│   ├── public
+│   ├── src
+│   │   └── app
+│   │       ├── api
+│   │       │   └── seasonality
+│   │       │       ├── route.ts
+│   │       │       └── utils.ts
+│   │       ├── best-worst-months
+│   │       │   └── page.tsx
+│   │       ├── best-worst-weeks
+│   │       │   └── page.tsx
+│   │       ├── components
+│   │       ├── constants.ts
+│   │       ├── favicon.ico
+│   │       ├── globals.css
+│   │       ├── interfaces.ts
+│   │       ├── layout.tsx
+│   │       ├── logo.svg
+│   │       ├── page.tsx
+│   │       └── types.ts
+│   ├── tailwind.config.ts
+│   ├── tsconfig.json
+│   └── yarn.lock
+├── docs
+│   └── setup.md
 ```
 
 ### Frontend
