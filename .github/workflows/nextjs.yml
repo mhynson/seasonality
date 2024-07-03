@@ -78,6 +78,8 @@ jobs:
 
       - name: Choose app dir
         run: cd app
+      - name: Choose app dir
+        run: cd app
       - name: What's in here??
         run: ls -l
       - name: Build with Next.js
