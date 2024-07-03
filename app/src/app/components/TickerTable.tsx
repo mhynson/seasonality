@@ -26,6 +26,7 @@ export const TickerTable = ({ data, label, tableId }: ITickerTableProps) => (
               <th className={tableHeaderClass}>Ticker</th>
               <th className={tableHeaderClass}>Chance of Being Up</th>
               <th className={tableHeaderClass}>Average Range</th>
+              <th className={tableHeaderClass}>Average Change</th>
             </tr>
           </thead>
           <tbody className="bg-white dark:bg-slate-800">
@@ -40,7 +41,12 @@ export const TickerTable = ({ data, label, tableId }: ITickerTableProps) => (
                     {(item.higherPct * 100).toFixed(2)}%
                   </span>
                 </td>
-                <td className="p-4 pl-8">{item.averageRange || "n/a"}</td>
+                <td className="p-4 pl-8">
+                  ${item.averageRange.toFixed(2) || "n/a"}
+                </td>
+                <td className="p-4 pl-8">
+                  {(100 * item.averageChange).toFixed(2) || "n/a"}%
+                </td>
               </tr>
             ))}
           </tbody>

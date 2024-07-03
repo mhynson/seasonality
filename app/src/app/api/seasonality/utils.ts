@@ -92,7 +92,6 @@ export const calculateSeasonality: TCalculateSeasonality = (
 const reduceGroupedPeriods: TReduceGroupedPeriods = (acc, [label, periods]) => {
   const validPeriods = periods.slice(0, LOOKBACK_YEARS);
   const changes = validPeriods.map(({ change }) => change);
-  console.log(label, changes.length, { changes });
   const averageChange = changes.reduce(sumReduction, 0) / validPeriods.length;
   const higherCloses = validPeriods.filter(({ up }) => up).length;
   const lowerCloses = validPeriods.filter(({ up }) => !up).length;
