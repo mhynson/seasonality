@@ -78,8 +78,6 @@ jobs:
 
       - name: Choose app dir
         run: cd app
-      - name: What's in here??
-        run: ls -l
       - name: Install dependencies
         working-directory: ./app
         run: ${{ steps.detect-package-manager.outputs.manager }} ${{ steps.detect-package-manager.outputs.command }}
@@ -89,7 +87,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./out
+          path: ./app/.next
 
   # Deployment job
   deploy:
