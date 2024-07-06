@@ -27,11 +27,13 @@ export const TickerSymbolForm = ({
         required
         rows={3}
         spellCheck="false"
+        tabIndex={0}
         value={symbols}
       />
       <button
         className="p-4 rounded mt-4 mb-4 w-36 bg-indigo-600 text-white"
         type="submit"
+        tabIndex={0}
       >
         Submit
       </button>
