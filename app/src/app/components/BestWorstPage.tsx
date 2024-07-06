@@ -27,6 +27,10 @@ type TSeasonalitySorter = (
   a: TSeasonalityAverageEntryWithSymbol[],
   b: TSeasonalityAverageEntryWithSymbol[]
 ) => number;
+type TSeasonalityObjectSorter = (
+  a: TSeasonalityAverageEntryWithSymbol,
+  b: TSeasonalityAverageEntryWithSymbol
+) => number;
 interface IBestWorstPageProps {
   timeframe: TTimeframeLabel;
 }
@@ -58,15 +62,26 @@ export const BestWorstPage = ({ timeframe }: IBestWorstPageProps) => {
     analyzeData(allData);
   };
 
-  const sortByDateAscending: TSeasonalitySorter = (
+  const sortByLabel: TSeasonalitySorter = (
     [{ label: labelA }],
     [{ label: labelB }]
-  ) => monthOrder.indexOf(labelA) - monthOrder.indexOf(labelB);
+  ) => {
+    if (monthOrder.indexOf(labelA) > -1) {
+      return monthOrder.indexOf(labelA) - monthOrder.indexOf(labelB);
+    } else {
+      return parseFloat(labelA) - parseFloat(labelB);
+    }
+  };
 
-  const sortByPercentDescending: TSeasonalitySorter = (
-    [{ higherPct: pctA }],
-    [{ higherPct: pctB }]
+  const sortByHigherPctDesc: TSeasonalityObjectSorter = (
+    { higherPct: pctA },
+    { higherPct: pctB }
   ) => pctB - pctA;
+
+  const sortByHigherPctAsc: TSeasonalityObjectSorter = (
+    { higherPct: pctA },
+    { higherPct: pctB }
+  ) => pctA - pctB;
 
   const analyzeData = (allData: TSymbolGroupedTimeframeSeasonality) => {
     const best: TGroupedSeasonalityAverages = {};
@@ -82,22 +97,20 @@ export const BestWorstPage = ({ timeframe }: IBestWorstPageProps) => {
             best[label] = best[label]
               ? [...best[label], resultWithSymbol]
               : [resultWithSymbol];
+            best[label].sort(sortByHigherPctDesc);
           }
           if (higherPct <= THRESHOLD_LOWER) {
             worst[label] = worst[label]
               ? [...worst[label], resultWithSymbol]
               : [resultWithSymbol];
+            worst[label].sort(sortByHigherPctAsc);
           }
         });
       });
     });
 
-    const sortedBest = Object.values(best)
-      .sort(sortByDateAscending)
-      .sort(sortByPercentDescending);
-    const sortedWorst = Object.values(worst)
-      .sort(sortByDateAscending)
-      .sort(sortByPercentDescending);
+    const sortedBest = Object.values(best).sort(sortByLabel);
+    const sortedWorst = Object.values(worst).sort(sortByLabel);
 
     setResult({ best: sortedBest, worst: sortedWorst });
   };
