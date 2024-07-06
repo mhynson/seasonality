@@ -17,12 +17,17 @@ export const TickerSymbolForm = ({
         Ticker Symbols
       </label>
       <textarea
-        className="block p-4 w-full mt-2 text-black"
         id="symbols"
-        value={symbols}
+        className="block p-4 w-full mt-2 text-black uppercase"
+        autoCapitalize="false"
+        autoComplete="false"
+        autoCorrect="false"
+        autoFocus
         onChange={onTextChange}
         required
         rows={3}
+        spellCheck="false"
+        value={symbols}
       />
       <button
         className="p-4 rounded mt-4 mb-4 w-36 bg-indigo-600 text-white"
