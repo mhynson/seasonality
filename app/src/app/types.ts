@@ -34,6 +34,7 @@ export type TSymbolGroupedTimeframeSeasonality = {
 export type TSeasonalityAverageEntry = {
   label: string;
   averageChange: number;
+  averageDrawdown: number;
   averageRange: number;
   changes: TSeasonalityEntry[];
   lowerCloses: number;
@@ -46,9 +47,12 @@ export type TSeasonalityEntry = {
   up: boolean;
   change: number;
   open: number;
+  high: number;
+  low: number;
   close: number;
   range: number;
   date: string;
+  drawdown: number;
 };
 
 export type Month =

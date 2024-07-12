@@ -13,6 +13,7 @@ export const HistoricalStats = ({ stats }: IHistoricalStatsProps) => {
 
   const buttonText = shouldShowStats ? "Hide" : "Show";
   const standardStyles = "bg-gray-100 text-black text-xs px-4";
+  const standardWithBorder = `${standardStyles} border-b-2 border-black`;
 
   return (
     <div>
@@ -24,9 +25,9 @@ export const HistoricalStats = ({ stats }: IHistoricalStatsProps) => {
       </button>
 
       {shouldShowStats ? (
-        <div className="flex flex-row justify-center py-3">
+        <div className="flex flex-col md:flex-row justify-center py-3">
           {stats.changes.map((period, idx) => {
-            const { change, date, open, close } = period;
+            const { change, date, open, close, high, low, drawdown } = period;
             const percentChangeClassName =
               change > 0 ? "bg-green-400" : "bg-red-400";
             const formattedDate = formatDate(new Date(date));
@@ -40,12 +41,21 @@ export const HistoricalStats = ({ stats }: IHistoricalStatsProps) => {
                   <span className="text-xs">{formattedDate}</span>
                 </div>
                 <div className={`w-full ${percentChangeClassName}`}>
-                  {(period.change * 100).toFixed(2)}%
+                  {(change * 100).toFixed(2)}%
                 </div>
-                <div className={`${standardStyles} border-b-2 border-black`}>
+                <div className={standardWithBorder}>
+                  High: ${high.toFixed(2)}
+                </div>
+                <div className={standardWithBorder}>
                   Open: ${open.toFixed(2)}
                 </div>
-                <div className={standardStyles}>Close: ${close.toFixed(2)}</div>
+                <div className={standardWithBorder}>
+                  Close: ${close.toFixed(2)}
+                </div>
+                <div className={standardWithBorder}>Low: ${low.toFixed(2)}</div>
+                <div className={standardStyles}>
+                  Max Drawdown: {(drawdown * 100).toFixed(2)}%
+                </div>
               </div>
             );
           })}

@@ -55,24 +55,29 @@ export const calculateSeasonality: TCalculateSeasonality = (
   data
 ) => {
   const groupedPeriods = data
-    .map(({ open, high, low, close, date }) => ({
+    .map(({ open, high, low, close, date, ...rest }) => ({
       label: getPeriodLabelFromDate(timeframe, new Date(date)),
       date,
       open,
+      high,
+      low,
       close,
+      drawdown: (low - high) / high,
       range: Math.abs(high - low),
       change: (close - open) / open,
     }))
     .reduce<TGroupedSeasonalityData>((acc, data) => {
-      const { label, change, range, date, open, close } = data;
+      const { label, change, range, date, open, close, drawdown } = data;
 
       const entry: TSeasonalityEntry = {
-        up: change * 100 >= 0,
+        ...data,
+        drawdown,
         change,
-        open,
         close,
-        range,
         date: date.toISOString(),
+        open,
+        range,
+        up: change * 100 >= 0,
       };
 
       return {
@@ -93,6 +98,9 @@ const reduceGroupedPeriods: TReduceGroupedPeriods = (acc, [label, periods]) => {
   const validPeriods = periods.slice(0, LOOKBACK_YEARS);
   const changes = validPeriods.map(({ change }) => change);
   const averageChange = changes.reduce(sumReduction, 0) / validPeriods.length;
+  const drawdowns = validPeriods.map(({ drawdown }) => drawdown);
+  const averageDrawdown =
+    drawdowns.reduce(sumReduction, 0) / validPeriods.length;
   const higherCloses = validPeriods.filter(({ up }) => up).length;
   const lowerCloses = validPeriods.filter(({ up }) => !up).length;
   const higherPct = higherCloses / validPeriods.length;
@@ -105,6 +113,7 @@ const reduceGroupedPeriods: TReduceGroupedPeriods = (acc, [label, periods]) => {
     {
       label,
       averageChange,
+      averageDrawdown,
       averageRange,
       lowerCloses,
       higherCloses,
