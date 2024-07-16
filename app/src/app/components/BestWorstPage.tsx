@@ -18,6 +18,7 @@ import {
 } from "../api/seasonality/utils";
 import { TSymbolGroupedTimeframeSeasonality, TTimeframeLabel } from "../types";
 import { TSeasonalityAverageEntryWithSymbol } from "../interfaces";
+import { GoogleAnalytics } from "@next/third-parties/google";
 
 type TGroupedSeasonalityAverages = {
   [key: string]: TSeasonalityAverageEntryWithSymbol[];
@@ -210,6 +211,7 @@ export const BestWorstPage = ({ timeframe }: IBestWorstPageProps) => {
             <p className="text-white">No results to display.</p>
           )}
         </div>
+        <GoogleAnalytics gaId="G-4QH71SMBZ9" />
       </main>
     </>
   );

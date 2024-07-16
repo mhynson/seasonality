@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { GoogleAnalytics } from "@next/third-parties/google";
+
 import { cleanSymbolList, getError } from "./api/seasonality/utils";
 import { LINKS as links } from "./constants";
 import { ErrorMessage } from "./components/ErrorMessage";
@@ -144,6 +146,7 @@ const Home = () => {
           )}
         </div>
       </main>
+      <GoogleAnalytics gaId="G-4QH71SMBZ9" />
     </>
   );
 };
