@@ -1,3 +1,4 @@
+import { monthOrder } from "../constants";
 import { TSeasonalityData } from "../types";
 import { AverageStats } from "./AverageStats";
 import { HistoricalStats } from "./HistoricalStats";
@@ -5,24 +6,13 @@ import { SeasonalityBarRow } from "./SeasonalityBarRow";
 import { SectionHeading } from "./SectionHeading";
 interface ISeasonalityBarsProps {
   seasonalityData: TSeasonalityData | undefined;
+  symbol: string;
 }
 
-const monthOrder = [
-  "Jan",
-  "Feb",
-  "Mar",
-  "Apr",
-  "May",
-  "Jun",
-  "Jul",
-  "Aug",
-  "Sep",
-  "Oct",
-  "Nov",
-  "Dec",
-];
-
-export const SeasonalityBars = ({ seasonalityData }: ISeasonalityBarsProps) => {
+export const SeasonalityBars = ({
+  seasonalityData,
+  symbol,
+}: ISeasonalityBarsProps) => {
   if (!seasonalityData) return <></>;
 
   const { timeframe, results } = seasonalityData;
@@ -38,15 +28,22 @@ export const SeasonalityBars = ({ seasonalityData }: ISeasonalityBarsProps) => {
     return monthOrder.indexOf(labelA) - monthOrder.indexOf(labelB);
   });
 
-  return sortedSeasonalityData.map((result) => (
-    <div key={result.label} className="mb-8 border-b-2 pb-4">
-      <SectionHeading view={timeframe} label={result.label} />
+  return sortedSeasonalityData.map((result) => {
+    const { label } = result;
+    return (
+      <div
+        key={label}
+        className="mb-8 border-b-2 pb-4"
+        id={`${symbol}--header-${timeframe}-${label}`}
+      >
+        <SectionHeading view={timeframe} label={label} />
 
-      <SeasonalityBarRow view={timeframe} label={result.label} stats={result} />
+        <SeasonalityBarRow view={timeframe} label={label} stats={result} />
 
-      <AverageStats stats={result} />
+        <AverageStats stats={result} />
 
-      <HistoricalStats stats={result} />
-    </div>
-  ));
+        <HistoricalStats stats={result} />
+      </div>
+    );
+  });
 };

@@ -8,6 +8,9 @@ import {
   TTimeframeLabel,
 } from "@/app/types";
 
+export const capitalize = (s: string) =>
+  s.charAt(0).toUpperCase() + s.substring(1);
+
 export const formatDate = (date: Date): string => {
   const year = date.getUTCFullYear();
   const month = String(date.getUTCMonth() + 1).padStart(2, "0");
