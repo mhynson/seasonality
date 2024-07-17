@@ -211,7 +211,6 @@ export const BestWorstPage = ({ timeframe }: IBestWorstPageProps) => {
             <p className="text-white">No results to display.</p>
           )}
         </div>
-        <GoogleAnalytics gaId="G-4QH71SMBZ9" />
       </main>
     </>
   );
