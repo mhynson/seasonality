@@ -1,4 +1,8 @@
-import { capitalize, getWeekNumber } from "../api/seasonality/utils";
+import {
+  capitalize,
+  getDayNumber,
+  getWeekNumber,
+} from "../api/seasonality/utils";
 import { monthOrder } from "../constants";
 import { TTimeframeLabel } from "../types";
 
@@ -7,10 +11,24 @@ interface IJumpScrollButtonProps {
   symbol: string;
 }
 
-export const JumpScrollButton = ({ symbol, view }: IJumpScrollButtonProps) => {
+const getLabelForView = (view: TTimeframeLabel): string => {
   const now = new Date();
-  const label =
-    view === "weekly" ? getWeekNumber(now) : monthOrder[now.getMonth()];
+  if (view === "daily") {
+    return "" + getDayNumber(now);
+  }
+
+  if (view === "weekly") {
+    return "" + getWeekNumber(now);
+  }
+
+  if (view === "monthly") {
+    return monthOrder[now.getMonth()];
+  }
+  return "";
+};
+
+export const JumpScrollButton = ({ symbol, view }: IJumpScrollButtonProps) => {
+  const label = getLabelForView(view);
   const id = `${symbol}--header-${view}-${label}`;
   const title = `Jump to Current ${capitalize(view.replace("ly", ""))}`;
 

@@ -18,19 +18,30 @@ export const formatDate = (date: Date): string => {
   return `${year}-${month}-${day}`;
 };
 
-export const getWeekNumber = (date: Date): number => {
+export const getCurrentDay = (date: Date): number => {
   const start = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
   const diff =
     Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()) -
     start.getTime();
+  return diff;
+};
+
+export const getDayNumber = (date: Date): number => {
   const oneDay = 86400000;
-  return Math.floor(diff / oneDay / 7);
+  return Math.floor(getCurrentDay(date) / oneDay);
+};
+
+export const getWeekNumber = (date: Date): number => {
+  const oneDay = 86400000;
+  return Math.floor(getCurrentDay(date) / oneDay / 7);
 };
 
 export const getPeriodLabelFromDate = (
   timeframe: TTimeframeLabel,
   date: Date
 ): string => {
+  if (timeframe === "daily") return getDayNumber(date).toString();
+
   if (timeframe === "weekly") return getWeekNumber(date).toString();
 
   if (timeframe === "monthly") {
@@ -41,6 +52,14 @@ export const getPeriodLabelFromDate = (
   }
 
   return date.toISOString();
+};
+
+export const getDateForDay = (dayNumber: number | string) => {
+  const day = parseFloat(`${dayNumber}`);
+  const currentYear = new Date().getFullYear();
+  const startDay = new Date(currentYear, 0, 1).getDay();
+  const offset = startDay <= 4 ? startDay : startDay - 7;
+  return formatDate(new Date(currentYear, 0, 1 + day - offset + 1));
 };
 
 export const getStartOfWeek = (weekNumber: number | string) => {

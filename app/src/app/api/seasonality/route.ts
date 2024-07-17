@@ -27,6 +27,18 @@ export async function GET(req: NextRequest) {
 
     const results = [];
 
+    if (timeframeType === "daily" || !timeframeType) {
+      const timeframe = "daily";
+      const dailyResult = await yahooFinance.historical(ticker, {
+        ...options,
+        interval: "1d",
+      });
+      results.push({
+        timeframe,
+        results: calculateSeasonality(timeframe, dailyResult),
+      });
+    }
+
     if (timeframeType === "weekly" || !timeframeType) {
       const timeframe = "weekly";
       const weeklyResult = await yahooFinance.historical(ticker, {
@@ -53,6 +65,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json(results);
   } catch (error) {
+    console.log(error);
     return NextResponse.json(
       [{ error: `No stock data for ticker: "${ticker}".` }],
       {

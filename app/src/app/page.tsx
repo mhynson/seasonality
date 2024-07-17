@@ -89,6 +89,19 @@ const Home = () => {
                 >
                   Weekly View
                 </button>
+                <button
+                  className={`${btnBaseClasses} ${
+                    view === "daily" ? btnActiveClasses : btnInactiveClasses
+                  }`}
+                  onClick={() =>
+                    setData((prevData) => ({
+                      ...prevData,
+                      [symbol]: { ...prevData[symbol], view: "daily" },
+                    }))
+                  }
+                >
+                  Daily View
+                </button>
               </div>
               <JumpScrollButton symbol={symbol} view={view} />
             </>
@@ -121,7 +134,7 @@ const Home = () => {
         <div className="mx-auto max-w-2xl lg:text-center">
           <h1 className="font-bold text-indigo-600">Stock Seasonality</h1>
           <p className="mt-2 text-3xl font-bold tracking-tight text-white sm:text-4xl">
-            View monthly and weekly stock seasonality!
+            View daily, weekly, and monthly stock seasonality!
           </p>
           <p className="mt-9 leading-7 text-white">
             Just enter ticker(s) below.

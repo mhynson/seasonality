@@ -1,10 +1,28 @@
-import { TSeasonalityAverageEntry } from "../types";
+import { getDayNumber, getWeekNumber } from "../api/seasonality/utils";
+import { monthOrder } from "../constants";
+import { TSeasonalityAverageEntry, TTimeframeLabel } from "../types";
 
 interface ISeasonalityBarRowProps {
-  view: string;
+  view: TTimeframeLabel;
   label: string;
   stats: TSeasonalityAverageEntry;
 }
+
+const updateLabelForView = (label: string, view: TTimeframeLabel): string => {
+  // const now = new Date();
+  // if (view === "daily") {
+  //   return "" + getDayNumber(now);
+  // }
+
+  if (view === "weekly") {
+    return "" + parseFloat(label) + 1;
+  }
+
+  // if (view === "monthly") {
+  //   return monthOrder[now.getMonth()];
+  // }
+  return label;
+};
 
 export const SeasonalityBarRow = (props: ISeasonalityBarRowProps) => {
   const { view, label, stats } = props;
@@ -12,7 +30,7 @@ export const SeasonalityBarRow = (props: ISeasonalityBarRowProps) => {
   return (
     <div className="flex items-center">
       <span className="w-12 text-black uppercase font-semibold">
-        {view === "weekly" ? parseFloat(label) + 1 : label}
+        {updateLabelForView(label, view)}
       </span>
       <div
         className="flex items-center bg-gradient-to-r from-blue-500 to-red-400 h-8 rounded"

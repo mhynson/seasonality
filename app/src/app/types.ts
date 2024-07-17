@@ -1,6 +1,6 @@
 import { HistoricalRowHistory } from "./interfaces";
 
-export type TTimeframeLabel = "weekly" | "monthly";
+export type TTimeframeLabel = "daily" | "weekly" | "monthly";
 
 export type TReduceGroupedPeriods = (
   acc: TSeasonalityAverageEntry[],
