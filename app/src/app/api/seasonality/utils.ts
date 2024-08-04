@@ -55,7 +55,8 @@ export const sumReduction = (total: number, current: number) => total + current;
 
 export const calculateSeasonality: TCalculateSeasonality = (
   timeframe,
-  data
+  data,
+  lookbackYears
 ) => {
   const groupedPeriods = data
     .map(({ open, high, low, close, date, ...rest }) => ({
@@ -90,42 +91,44 @@ export const calculateSeasonality: TCalculateSeasonality = (
     }, {});
 
   const seasonalityAverages = Object.entries(groupedPeriods).reduce(
-    reduceGroupedPeriods,
+    reduceGroupedPeriods(lookbackYears),
     []
   );
 
   return seasonalityAverages;
 };
 
-const reduceGroupedPeriods: TReduceGroupedPeriods = (acc, [label, periods]) => {
-  const validPeriods = periods.slice(0, LOOKBACK_YEARS);
-  const changes = validPeriods.map(({ change }) => change);
-  const averageChange = changes.reduce(sumReduction, 0) / validPeriods.length;
-  const drawdowns = validPeriods.map(({ drawdown }) => drawdown);
-  const averageDrawdown =
-    drawdowns.reduce(sumReduction, 0) / validPeriods.length;
-  const higherCloses = validPeriods.filter(({ up }) => up).length;
-  const lowerCloses = validPeriods.filter(({ up }) => !up).length;
-  const higherPct = higherCloses / validPeriods.length;
-  const averageRange =
-    validPeriods.map(({ range }) => range).reduce(sumReduction, 0) /
-    validPeriods.length;
+const reduceGroupedPeriods: TReduceGroupedPeriods =
+  (years: number) =>
+  (acc, [label, periods]) => {
+    const validPeriods = periods.slice(0, years);
+    const changes = validPeriods.map(({ change }) => change);
+    const averageChange = changes.reduce(sumReduction, 0) / validPeriods.length;
+    const drawdowns = validPeriods.map(({ drawdown }) => drawdown);
+    const averageDrawdown =
+      drawdowns.reduce(sumReduction, 0) / validPeriods.length;
+    const higherCloses = validPeriods.filter(({ up }) => up).length;
+    const lowerCloses = validPeriods.filter(({ up }) => !up).length;
+    const higherPct = higherCloses / validPeriods.length;
+    const averageRange =
+      validPeriods.map(({ range }) => range).reduce(sumReduction, 0) /
+      validPeriods.length;
 
-  return [
-    ...acc,
-    {
-      label,
-      averageChange,
-      averageDrawdown,
-      averageRange,
-      lowerCloses,
-      higherCloses,
-      count: validPeriods.length,
-      higherPct,
-      changes: validPeriods,
-    },
-  ];
-};
+    return [
+      ...acc,
+      {
+        label,
+        averageChange,
+        averageDrawdown,
+        averageRange,
+        lowerCloses,
+        higherCloses,
+        count: validPeriods.length,
+        higherPct,
+        changes: validPeriods,
+      },
+    ];
+  };
 
 export const cleanSymbolList = (symbols: string): string[] =>
   symbols

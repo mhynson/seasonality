@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { GoogleAnalytics } from "@next/third-parties/google";
 
 import { cleanSymbolList, getError } from "./api/seasonality/utils";
@@ -15,10 +15,14 @@ import {
   TSymbolSeasonalityDataView,
 } from "./types";
 import { JumpScrollButton } from "./components/JumpScrollButton";
+import { YearsSelector } from "./components/YearsSelector";
+import { YearsContext, YearsContextType } from "./context/YearsContext";
 
 const Home = () => {
   const [symbols, setSymbols] = useState("");
   const [data, setData] = useState<TSymbolGroupedData>({});
+
+  const { years } = useContext(YearsContext) as YearsContextType;
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -27,7 +31,9 @@ const Home = () => {
     const allData: TSymbolGroupedData = {};
 
     for (const symbol of symbolsArray) {
-      const response = await fetch(`/api/seasonality?ticker=${symbol}`);
+      const response = await fetch(
+        `/api/seasonality?ticker=${symbol}&years=${years}`
+      );
       const result = await response.json();
       allData[symbol] = { view: "monthly", data: result };
     }
@@ -136,7 +142,7 @@ const Home = () => {
             onTextChange={(e) => setSymbols(e.target.value)}
             symbols={symbols}
           />
-
+          <YearsSelector years={years} />
           {Object.keys(data).length > 0 && (
             <div>
               {Object.entries(data).map(([symbol, symbolData]) =>
