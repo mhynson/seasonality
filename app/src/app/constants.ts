@@ -1,4 +1,4 @@
-export const LOOKBACK_YEARS = 5;
+export const LOOKBACK_YEARS = 10;
 export const THRESHOLD_UPPER = 0.75;
 export const THRESHOLD_LOWER = 0.2;
 export const LINKS = [

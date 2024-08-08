@@ -3,13 +3,16 @@ import { HistoricalRowHistory } from "./interfaces";
 export type TTimeframeLabel = "weekly" | "monthly";
 
 export type TReduceGroupedPeriods = (
+  years: number
+) => (
   acc: TSeasonalityAverageEntry[],
   [label, periods]: [string, TSeasonalityEntry[]]
 ) => TSeasonalityAverageEntry[];
 
 export type TCalculateSeasonality = (
   timeframe: TTimeframeLabel,
-  data: HistoricalRowHistory[]
+  data: HistoricalRowHistory[],
+  lookbackYears: number
 ) => TSeasonalityAverageEntry[];
 
 export type TSeasonalityData = {

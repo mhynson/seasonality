@@ -8,6 +8,9 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const ticker = searchParams.get("ticker");
   const timeframeType = searchParams.get("timeframe");
+  const yearsParams = searchParams.get("years");
+
+  const years = parseInt(yearsParams || `${LOOKBACK_YEARS}`, 10);
 
   if (!ticker) {
     return NextResponse.json([{ error: "Must enter a ticker!" }], {
@@ -17,7 +20,7 @@ export async function GET(req: NextRequest) {
 
   const endDate = new Date();
   const startDate = new Date();
-  startDate.setFullYear(startDate.getFullYear() - LOOKBACK_YEARS);
+  startDate.setFullYear(startDate.getFullYear() - years);
 
   try {
     const options = {
@@ -35,7 +38,7 @@ export async function GET(req: NextRequest) {
       });
       results.push({
         timeframe,
-        results: calculateSeasonality(timeframe, weeklyResult),
+        results: calculateSeasonality(timeframe, weeklyResult, years),
       });
     }
 
@@ -47,7 +50,7 @@ export async function GET(req: NextRequest) {
       });
       results.push({
         timeframe,
-        results: calculateSeasonality(timeframe, monthlyResult),
+        results: calculateSeasonality(timeframe, monthlyResult, years),
       });
     }
 

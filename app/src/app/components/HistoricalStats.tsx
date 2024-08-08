@@ -12,7 +12,7 @@ export const HistoricalStats = ({ stats }: IHistoricalStatsProps) => {
   if (!stats.changes) return <></>;
 
   const buttonText = shouldShowStats ? "Hide" : "Show";
-  const standardStyles = "bg-gray-100 text-black text-xs px-4";
+  const standardStyles = "bg-gray-100 text-black text-xs px-4 py-1";
   const standardWithBorder = `${standardStyles} border-b-2 border-black`;
 
   return (
@@ -25,7 +25,7 @@ export const HistoricalStats = ({ stats }: IHistoricalStatsProps) => {
       </button>
 
       {shouldShowStats ? (
-        <div className="flex flex-col md:flex-row justify-center py-3">
+        <div className="grid grid-cols-4 gap-3 justify-center py-3">
           {stats.changes.map((period, idx) => {
             const { change, date, open, close, high, low, drawdown } = period;
             const percentChangeClassName =
