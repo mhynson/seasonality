@@ -1,6 +1,6 @@
 "use client";
 
-import { useContext, useState } from "react";
+import { useState } from "react";
 import { GoogleAnalytics } from "@next/third-parties/google";
 
 import { cleanSymbolList } from "./api/seasonality/utils";
@@ -9,14 +9,14 @@ import { GlobalNav } from "./components/GlobalNav";
 import { TickerSymbolForm } from "./components/TickerSymbolForm";
 import { TSymbolGroupedData } from "./types";
 import { YearsSelector } from "./components/YearsSelector";
-import { YearsContext, YearsContextType } from "./context/YearsContext";
+import { useYears, YearsContextType } from "./context/YearsContext";
 import { SymbolResults } from "./components/SymbolResults";
 
 const Home = () => {
   const [symbols, setSymbols] = useState("");
   const [data, setData] = useState<TSymbolGroupedData>({});
 
-  const { years } = useContext(YearsContext) as YearsContextType;
+  const { years } = useYears() as YearsContextType;
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();

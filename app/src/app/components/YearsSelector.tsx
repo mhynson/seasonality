@@ -1,16 +1,11 @@
-import { ChangeEvent, useContext } from "react";
-import {
-  useYears,
-  YearsContext,
-  YearsContextType,
-} from "../context/YearsContext";
+import { useYears, YearsContextType } from "../context/YearsContext";
 
 interface IYearsSelector {
   years: number;
 }
 
 export const YearsSelector = ({ years }: IYearsSelector) => {
-  const { setYears } = useContext(YearsContext) as YearsContextType;
+  const { setYears } = useYears() as YearsContextType;
   return (
     <>
       <div className="flex flex-col justify-start items-start mb-8">

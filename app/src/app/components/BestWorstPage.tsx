@@ -19,6 +19,8 @@ import {
 import { TSymbolGroupedTimeframeSeasonality, TTimeframeLabel } from "../types";
 import { TSeasonalityAverageEntryWithSymbol } from "../interfaces";
 import { GoogleAnalytics } from "@next/third-parties/google";
+import { YearsSelector } from "./YearsSelector";
+import { useYears } from "../context/YearsContext";
 
 type TGroupedSeasonalityAverages = {
   [key: string]: TSeasonalityAverageEntryWithSymbol[];
@@ -45,6 +47,7 @@ export const BestWorstPage = ({ timeframe }: IBestWorstPageProps) => {
     worst: TSeasonalityAverageEntryWithSymbol[][];
   }>({ best: [], worst: [] });
   const [activeTab, setActiveTab] = useState("best");
+  const { years } = useYears();
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -53,7 +56,7 @@ export const BestWorstPage = ({ timeframe }: IBestWorstPageProps) => {
 
     for (const symbol of symbolsArray) {
       const response = await fetch(
-        `/api/seasonality?ticker=${symbol}&timeframe=${timeframe}`
+        `/api/seasonality?ticker=${symbol}&timeframe=${timeframe}&years=${years}`
       );
       const result = await response.json();
       allData[symbol] = result;
@@ -124,6 +127,7 @@ export const BestWorstPage = ({ timeframe }: IBestWorstPageProps) => {
         <BestWorstHeader {...{ timeframe }} />
 
         <div className="container xl mt-9 mx-auto p-12 bg-slate-700 rounded-xl shadow-lg text-white">
+          <YearsSelector years={years} />
           <TickerSymbolForm
             handleSubmit={handleSubmit}
             onTextChange={(e) => setSymbols(e.target.value)}
