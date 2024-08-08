@@ -70,7 +70,6 @@ const Home = () => {
           )}
         </div>
       </main>
-      <GoogleAnalytics gaId="G-4QH71SMBZ9" />
     </>
   );
 };
