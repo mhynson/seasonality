@@ -2,7 +2,17 @@
 
 ## Overview
 
-The Stock Seasonality App allows users to enter a ticker symbol for any stock and view the stock's monthly and weekly seasonality. The app uses the past 5 years of data by default but will eventually allow the user to configure a different amount of time (e.g., 2 years, 20 years, 10 years, etc.). The monthly seasonality displays each of the 12 months, the average percent change for the month, and the probability that the stock price will go up for each month. The weekly seasonality displays data for each of the 52 weeks in a year and includes the average percent change and the probability that the stock price will go up for each week.
+The Stock Seasonality App allows users to enter a ticker symbol for any stock and view the stock's monthly and weekly seasonality. The app uses the past 5 years of data by default and also allows the user to configure a different amount of time (between 1 and 50 years). There are two levels of seasonality available: monthly and weekly.
+
+Each seasonality result displays:
+
+- probability that the stock price will go up for each month
+- average percent change for the month
+- drawdown percentage for each month
+
+There are also pages to display the best and worst weeks and months for a given stock.
+
+Note that all symbols are based on those used by Yahoo Finance.
 
 ## Objectives
 
