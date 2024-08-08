@@ -1,4 +1,4 @@
-import React from "react";
+import React, { Dispatch, SetStateAction } from "react";
 import { getError } from "../api/seasonality/utils";
 import { TSymbolGroupedData, TSymbolSeasonalityDataView } from "../types";
 import { JumpScrollButton } from "./JumpScrollButton";
@@ -8,7 +8,7 @@ import { SeasonalityBars } from "./SeasonalityBars";
 interface ISymbolResults {
   symbol: string;
   symbolData: TSymbolSeasonalityDataView;
-  setData: (data: TSymbolGroupedData) => void;
+  setData: Dispatch<SetStateAction<TSymbolGroupedData>>;
 }
 
 export const SymbolResults: React.FC<ISymbolResults> = ({
@@ -38,13 +38,10 @@ export const SymbolResults: React.FC<ISymbolResults> = ({
                   view === "monthly" ? btnActiveClasses : btnInactiveClasses
                 }`}
                 onClick={() =>
-                  setData((prevData: TSymbolGroupedData) => {
-                    const newData = {
-                      ...prevData,
-                      [symbol]: { ...prevData[symbol], view: "monthly" },
-                    };
-                    return newData;
-                  })
+                  setData((prevData: TSymbolGroupedData) => ({
+                    ...prevData,
+                    [symbol]: { ...prevData[symbol], view: "monthly" },
+                  }))
                 }
               >
                 Monthly View
@@ -54,12 +51,10 @@ export const SymbolResults: React.FC<ISymbolResults> = ({
                   view === "weekly" ? btnActiveClasses : btnInactiveClasses
                 }`}
                 onClick={() =>
-                  setData((prevData: TSymbolGroupedData) => {
-                    return {
-                      ...prevData,
-                      [symbol]: { ...prevData[symbol], view: "weekly" },
-                    };
-                  })
+                  setData((prevData: TSymbolGroupedData) => ({
+                    ...prevData,
+                    [symbol]: { ...prevData[symbol], view: "weekly" },
+                  }))
                 }
               >
                 Weekly View
