@@ -95,7 +95,7 @@ Note that all symbols are based on those used by Yahoo Finance.
 ### Backend
 
 - **Next.js API Routes**: The backend logic is handled using Next.js API routes. This eliminates the need for a separate Express server.
-- **Yahoo Finance API**: We use the `yahoo-finance2` package to fetch historical stock data.
+- **Yahoo Finance API**: We use the `yahoo-finance2` package to fetch a stock's chart data and convert it to historical data. See https://github.com/gadicc/node-yahoo-finance2/issues/795
 
 ## Technical Architecture
 
